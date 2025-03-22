@@ -1,0 +1,91 @@
+{
+  "name": "laravel-forgemate",
+  "displayName": "Laravel Forgemate",
+  "description": "Advanced Laravel scaffold generator with service-repository pattern support",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Snippets",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:laravelForgemate.showWebview",
+    "onCommand:laravelForgemate.generateScaffold",
+    "onCommand:laravelForgemate.initializeProject",
+    "onCommand:laravelForgemate.synchronizeStubs",
+    "onView:laravelForgemateExplorer"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "laravelForgemate.showWebview",
+        "title": "Laravel Forgemate: Open UI Panel"
+      },
+      {
+        "command": "laravelForgemate.generateScaffold",
+        "title": "Laravel Forgemate: Generate Scaffold"
+      },
+      {
+        "command": "laravelForgemate.initializeProject",
+        "title": "Laravel Forgemate: Initialize Project"
+      },
+      {
+        "command": "laravelForgemate.synchronizeStubs",
+        "title": "Laravel Forgemate: Synchronize Stubs"
+      },
+      {
+        "command": "laravelForgemate.refreshExplorer",
+        "title": "Laravel Forgemate: Refresh Explorer"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "laravelForgemateExplorer",
+          "name": "Laravel Forgemate"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Laravel Forgemate",
+      "properties": {
+        "laravelForgemate.laravelProjectPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Laravel project (Leave empty to use workspace folder)"
+        },
+        "laravelForgemate.useCustomStubs": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use custom stubs from Laravel project if available"
+        },
+        "laravelForgemate.stubsDirectory": {
+          "type": "string",
+          "default": "stubs/scaffold",
+          "description": "Directory for custom stubs (relative to Laravel project)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.10",
+    "@types/pluralize": "^0.0.33",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
+    "eslint": "^8.39.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "pluralize": "^8.0.0"
+  }
+}

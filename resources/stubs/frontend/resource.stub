@@ -1,0 +1,9 @@
+import { Resource } from './Resource';
+import { {{modelName}} } from '../Models/{{modelName}}';
+
+/**
+ * {{modelName}}Resource interface
+ */
+export interface {{modelName}}Resource extends Resource, {{modelName}} {
+    // Add additional resource properties here
+}

@@ -1,0 +1,8 @@
+<?php
+
+namespace App\Support\Interfaces\Repositories;
+
+interface {{modelName}}RepositoryInterface extends BaseRepositoryInterface
+{
+    // Add custom repository methods here if needed
+}

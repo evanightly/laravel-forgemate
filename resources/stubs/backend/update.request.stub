@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Http\Requests\{{modelName}};
+
+use Illuminate\Foundation\Http\FormRequest;
+use App\Support\Enums\IntentEnum;
+
+class Update{{modelName}}Request extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        // Add authorization logic
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        $rules = [
+            {{requestRules}}
+        ];
+
+        // Handle custom intents if needed
+        switch ($this->input('_intent')) {
+            case IntentEnum::CUSTOM_ACTION->value:
+                // Add custom validation for specific actions
+                break;
+        }
+
+        return $rules;
+    }
+}

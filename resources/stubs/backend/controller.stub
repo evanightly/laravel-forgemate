@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\{{modelName}}\Store{{modelName}}Request;
+use App\Http\Requests\{{modelName}}\Update{{modelName}}Request;
+use App\Http\Resources\{{modelName}}Resource;
+use App\Support\Interfaces\Services\{{modelName}}ServiceInterface;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class {{modelName}}Controller extends Controller
+{
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(
+        protected {{modelName}}ServiceInterface ${{modelCamelCase}}Service
+    ) {
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $perPage = $request->input('perPage', 15);
+        ${{modelPluralCamelCase}} = $this->{{modelCamelCase}}Service->getPaginated($request->all(), $perPage);
+        
+        return Inertia::render('{{modelName}}/Index', [
+            '{{modelPluralCamelCase}}' => {{modelName}}Resource::collection(${{modelPluralCamelCase}}),
+            'meta' => [
+                'title' => '{{modelName}} List',
+            ],
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return Inertia::render('{{modelName}}/Create', [
+            'meta' => [
+                'title' => 'Create {{modelName}}',
+            ],
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Store{{modelName}}Request $request)
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->create($request->validated());
+        
+        return redirect()->route('{{modelSnakeCase}}.index')
+            ->with('success', '{{modelName}} created successfully.');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->findOrFail($id);
+        
+        return Inertia::render('{{modelName}}/Show', [
+            '{{modelCamelCase}}' => new {{modelName}}Resource(${{modelCamelCase}}),
+            'meta' => [
+                'title' => 'View {{modelName}}',
+            ],
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->findOrFail($id);
+        
+        return Inertia::render('{{modelName}}/Edit', [
+            '{{modelCamelCase}}' => new {{modelName}}Resource(${{modelCamelCase}}),
+            'meta' => [
+                'title' => 'Edit {{modelName}}',
+            ],
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Update{{modelName}}Request $request, string $id)
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->update($id, $request->validated());
+        
+        return redirect()->route('{{modelSnakeCase}}.index')
+            ->with('success', '{{modelName}} updated successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        $this->{{modelCamelCase}}Service->delete($id);
+        
+        return redirect()->route('{{modelSnakeCase}}.index')
+            ->with('success', '{{modelName}} deleted successfully.');
+    }
+}

@@ -1,0 +1,12 @@
+import { serviceHooksFactory } from '@/Services/serviceHooksFactory';
+import { ROUTES } from '@/Support/Constants/routes';
+import { {{modelName}}Resource } from '@/Support/Interfaces/Resources';
+
+export const {{modelCamelCase}}ServiceHook = {
+    ...serviceHooksFactory<{{modelName}}Resource>({
+        baseRoute: ROUTES.{{modelUpperSnakeCase}}S,
+    }),
+    customFunctionExample: async () => {
+        console.log('custom function');
+    },
+};
