@@ -36,70 +36,77 @@ export class TemplateEngine {
       console.warn('Missing essential stubs:', missingStubs);
     }
   }
-  
+
   /**
-   * Generate a file from a template
+   * Generate a file using a stub template
    */
   public async generateFile(stubName: string, model: ModelDefinition, outputPath: string): Promise<void> {
-    // Get template content
-    const templateContent = await this.getStubContent(stubName);
-    if (!templateContent) {
-      throw new Error(`Stub file ${stubName} not found in either custom or default locations`);
-    }
-    
-    // Process template
-    const processedContent = this.templateProcessor.processTemplate(templateContent, model);
+    const content = await this.getStubContent(stubName, model);
     
     // Create directory if it doesn't exist
-    const dirPath = path.dirname(outputPath);
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
+    const dir = path.dirname(outputPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
     
-    // Write file
-    fs.writeFileSync(outputPath, processedContent);
+    // Write the file
+    fs.writeFileSync(outputPath, content);
+  }
+
+  /**
+   * Get stub content by name, checking for custom stubs first if enabled
+   */
+  public async getStubContent(stubName: string, model?: ModelDefinition): Promise<string> {
+    // Get stub content from file
+    let stubContent: string;
+    
+    // Check if custom stubs are enabled
+    const config = vscode.workspace.getConfiguration('laravelForgemate');
+    const useCustomStubs = config.get<boolean>('useCustomStubs', false);
+    const laravelProjectPath = config.get<string>('laravelProjectPath', '');
+    const stubsDir = config.get<string>('stubsDirectory', 'stubs/scaffold');
+    
+    // Initialize project root path - either from settings or first workspace folder
+    let projectRoot = '';
+    if (laravelProjectPath && fs.existsSync(laravelProjectPath)) {
+      projectRoot = laravelProjectPath;
+    } else if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+      projectRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    }
+    
+    // If custom stubs are enabled, check for a custom stub file first
+    if (useCustomStubs && projectRoot) {
+      const customStubPath = path.join(projectRoot, stubsDir, `${stubName}.stub`);
+      
+      vscode.window.showInformationMessage(`Checking for custom stub: ${customStubPath}`);
+      console.log(`Checking for custom stub: ${customStubPath}`);
+      
+      if (fs.existsSync(customStubPath)) {
+        vscode.window.showInformationMessage(`Using custom stub: ${customStubPath}`);
+        console.log(`Using custom stub: ${customStubPath}`);
+        stubContent = fs.readFileSync(customStubPath, 'utf8');
+        return model ? this.templateProcessor.processTemplate(stubContent, model) : stubContent;
+      } else {
+        console.log(`Custom stub not found at: ${customStubPath}, using default stub`);
+      }
+    }
+    
+    // Fall back to default stub
+    const stubPath = this.context.asAbsolutePath(path.join('resources/stubs', `${stubName}.stub`));
+    if (!fs.existsSync(stubPath)) {
+      throw new Error(`Stub file not found: ${stubPath}`);
+    }
+    
+    console.log(`Using default stub: ${stubPath}`);
+    stubContent = fs.readFileSync(stubPath, 'utf8');
+    return model ? this.templateProcessor.processTemplate(stubContent, model) : stubContent;
   }
   
   /**
-   * Get stub content from either custom or default location
+   * Read a template file and process it with the given model
    */
-  public async getStubContent(stubName: string): Promise<string> {
-    try {
-      // Try to get from custom location first
-      const config = vscode.workspace.getConfiguration('laravelForgemate');
-      const useCustomStubs = config.get<boolean>('useCustomStubs', false);
-      const laravelProjectPath = config.get<string>('laravelProjectPath', '');
-      const stubsDir = config.get<string>('stubsDirectory', 'stubs/scaffold');
-      
-      if (useCustomStubs && laravelProjectPath) {
-        const customStubPath = path.join(laravelProjectPath, stubsDir, `${stubName}.stub`);
-        if (fs.existsSync(customStubPath)) {
-          return fs.readFileSync(customStubPath, 'utf-8');
-        }
-      }
-      
-      // Fall back to default stubs
-      const defaultStubPath = this.context.asAbsolutePath(path.join('resources/stubs', `${stubName}.stub`));
-      if (fs.existsSync(defaultStubPath)) {
-        return fs.readFileSync(defaultStubPath, 'utf-8');
-      }
-      
-      // Check if it's a file path instead of a stub name
-      if (fs.existsSync(stubName)) {
-        return fs.readFileSync(stubName, 'utf-8');
-      }
-
-      // Help debug the error by showing what was attempted
-      console.error(`Stub not found: ${stubName}`);
-      console.error(`- Default path: ${defaultStubPath}`);
-      if (useCustomStubs && laravelProjectPath) {
-        console.error(`- Custom path: ${path.join(laravelProjectPath, stubsDir, `${stubName}.stub`)}`);
-      }
-      
-      throw new Error(`Stub file ${stubName} not found in either custom or default locations`);
-    } catch (error) {
-      console.error('Error getting stub content:', error);
-      throw error;
-    }
+  public async processTemplate(templatePath: string, model: ModelDefinition): Promise<string> {
+    const content = await this.getStubContent(templatePath, model);
+    return this.templateProcessor.processTemplate(content, model);
   }
 }

@@ -138,9 +138,6 @@ export class WebviewProvider {
         const repoPath = path.join(projectRoot, `app/Repositories/${model.name}Repository.php`);
         await this.templateEngine.generateFile('backend/repository', model, repoPath);
         generatedFiles.push(repoPath);
-        
-        // Register repository in the service provider
-        this.registerRepositoryInServiceProvider(projectRoot, model.name);
       }
 
       // Generate service interface
@@ -267,41 +264,6 @@ export class WebviewProvider {
     } catch (error) {
       console.error('Error generating frontend files:', error);
       throw error;
-    }
-  }
-
-  /**
-   * Register the repository in the service provider
-   */
-  private registerRepositoryInServiceProvider(projectRoot: string, modelName: string): void {
-    try {
-      const providerPath = path.join(projectRoot, 'app/Providers/RepositoryServiceProvider.php');
-      
-      if (!fs.existsSync(providerPath)) {
-        return;
-      }
-      
-      let content = fs.readFileSync(providerPath, 'utf-8');
-      
-      // Check if the repository is already registered
-      if (content.includes(`${modelName}RepositoryInterface`)) {
-        return;
-      }
-      
-      const newBinding = `
-        \\App\\Support\\Interfaces\\Repositories\\${modelName}RepositoryInterface::class => \\App\\Repositories\\${modelName}Repository::class,
-      `;
-      
-      const registerClosingBraceIndex = content.indexOf('    public function boot(');
-      if (registerClosingBraceIndex !== -1) {
-        const newContent = 
-          content.substring(0, registerClosingBraceIndex) + 
-          newBinding + 
-          content.substring(registerClosingBraceIndex);
-        fs.writeFileSync(providerPath, newContent);
-      }
-    } catch (error) {
-      console.error('Error registering repository in service provider:', error);
     }
   }
 

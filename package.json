@@ -62,7 +62,7 @@
         },
         "laravelForgemate.useCustomStubs": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Use custom stubs from Laravel project if available"
         },
         "laravelForgemate.stubsDirectory": {
