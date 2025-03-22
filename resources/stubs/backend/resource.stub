@@ -19,10 +19,10 @@ class {{modelName}}Resource extends JsonResource
     {
         return $this->filterData([
             'id' => $this->id,
-            {{resourceAttributes}}
+{{resourceAttributes}}
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            {{resourceRelationships}}
+{{resourceRelationships}}
         ], $request);
     }
 }

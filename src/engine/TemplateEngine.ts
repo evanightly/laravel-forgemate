@@ -9,6 +9,32 @@ export class TemplateEngine {
   
   constructor(private context: vscode.ExtensionContext) {
     this.templateProcessor = new TemplateProcessor();
+    
+    // Initialize by validating the stubs directory exists
+    this.validateStubsExist();
+  }
+  
+  /**
+   * Validate that essential stubs exist
+   */
+  private validateStubsExist(): void {
+    const essentialStubs = [
+      'backend/base-repository-interface',
+      'backend/base-repository',
+      'backend/enums/intent-enum',
+      'backend/enums/permission-enum',
+      'backend/repository-service-provider',
+      'backend/traits/repositories/handles-filtering'
+    ];
+    
+    const missingStubs = essentialStubs.filter(stub => {
+      const stubPath = this.context.asAbsolutePath(path.join('resources/stubs', `${stub}.stub`));
+      return !fs.existsSync(stubPath);
+    });
+    
+    if (missingStubs.length > 0) {
+      console.warn('Missing essential stubs:', missingStubs);
+    }
   }
   
   /**
@@ -61,6 +87,13 @@ export class TemplateEngine {
       // Check if it's a file path instead of a stub name
       if (fs.existsSync(stubName)) {
         return fs.readFileSync(stubName, 'utf-8');
+      }
+
+      // Help debug the error by showing what was attempted
+      console.error(`Stub not found: ${stubName}`);
+      console.error(`- Default path: ${defaultStubPath}`);
+      if (useCustomStubs && laravelProjectPath) {
+        console.error(`- Custom path: ${path.join(laravelProjectPath, stubsDir, `${stubName}.stub`)}`);
       }
       
       throw new Error(`Stub file ${stubName} not found in either custom or default locations`);

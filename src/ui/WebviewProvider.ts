@@ -5,6 +5,7 @@ import { ModelDefinition } from '../types/ModelDefinition';
 import { TreeDataProvider } from './TreeDataProvider';
 import path from 'path';
 import fs from 'fs';
+import { ProjectInitializer } from '../initializer/ProjectInitializer';
 
 export class WebviewProvider {
   private panel: vscode.WebviewPanel | undefined;
@@ -1090,6 +1091,9 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
       const laravelProjectPath = config.get<string>('laravelProjectPath', '');
       const projectRoot = this.getProjectRoot(laravelProjectPath);
       
+      // Ensure baseline files are present
+      await this.ensureBaselineFilesExist(projectRoot);
+      
       // Generate files
       const generatedFiles: string[] = [];
       
@@ -1143,48 +1147,366 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
   }
 
   /**
-   * Validate model definition before generation
+   * Ensure baseline files exist before generating scaffolds
    */
-  private validateModel(model: ModelDefinition): void {
-    if (!model.name) {
-      throw new Error('Model name is required');
+  private async ensureBaselineFilesExist(projectRoot: string): Promise<void> {
+    try {
+      // Create project initializer
+      const templateEngine = new TemplateEngine(this.context);
+      const initializer = new ProjectInitializer(this.context, templateEngine);
+      
+      // Check for essential backend files
+      await this.ensureBackendBaseline(projectRoot, initializer);
+      
+      // Check for essential frontend files
+      await this.ensureFrontendBaseline(projectRoot, initializer);
+    } catch (error) {
+      console.error('Error ensuring baseline files:', error);
+      throw new Error(`Failed to initialize project: ${(error as Error).message}`);
     }
-    if (!/^[A-Z][a-zA-Z0-9]*$/.test(model.name)) {
-      throw new Error('Model name must be in PascalCase');
+  }
+
+  /**
+   * Ensure backend baseline files exist
+   */
+  private async ensureBackendBaseline(projectRoot: string, initializer: ProjectInitializer): Promise<void> {
+    // Check for BaseRepositoryInterface
+    const baseRepoInterfacePath = path.join(projectRoot, 'app/Support/Interfaces/Repositories/BaseRepositoryInterface.php');
+    if (!fs.existsSync(baseRepoInterfacePath)) {
+      // Create the necessary directories and files
+      await initializer.createBaseRepositoryInterface(projectRoot);
+      await initializer.createBaseRepository(projectRoot);
+      await initializer.createRepositoryServiceProvider(projectRoot);
+      await initializer.createBackendTraits(projectRoot);
+      await initializer.createIntentEnum(projectRoot);
+      await initializer.createPermissionEnum(projectRoot);
+      
+      vscode.window.showInformationMessage('Project initialized: Created base repository files');
     }
-    if (!model.attributes || model.attributes.length === 0) {
-      throw new Error('At least one attribute is required');
+  }
+
+  /**
+   * Ensure frontend baseline files exist
+   */
+  private async ensureFrontendBaseline(projectRoot: string, _initializer: ProjectInitializer): Promise<void> {
+    // Check for serviceHooksFactory.ts
+    const serviceHooksFactoryPath = path.join(projectRoot, 'resources/js/Services/serviceHooksFactory.ts');
+    if (!fs.existsSync(serviceHooksFactoryPath)) {
+      // Create frontend helper directories
+      await this.createServiceHooksFactory(projectRoot);
+      await this.createHelperFunctions(projectRoot);
+      await this.createFrontendInterfaces(projectRoot);
+      
+      vscode.window.showInformationMessage('Project initialized: Created frontend service hooks and interfaces');
+    }
+  }
+
+  /**
+   * Create serviceHooksFactory.ts and related helpers
+   */
+  private async createServiceHooksFactory(projectRoot: string): Promise<void> {
+    const servicesDir = path.join(projectRoot, 'resources/js/Services');
+    if (!fs.existsSync(servicesDir)) {
+      fs.mkdirSync(servicesDir, { recursive: true });
     }
     
-    // Validate attributes
-    for (const attr of model.attributes) {
-      if (!attr.name) {
-        throw new Error('Attribute name is required');
-      }
-      if (!attr.type) {
-        throw new Error(`Type is required for attribute "${attr.name}"`);
-      }
-      // Check for valid attribute name format (snake_case)
-      if (!/^[a-z][a-z0-9_]*$/.test(attr.name)) {
-        throw new Error(`Attribute name "${attr.name}" must be in snake_case format`);
-      }
+    const serviceHooksFactoryPath = path.join(servicesDir, 'serviceHooksFactory.ts');
+    const serviceHooksFactoryContent = `import { generateUseGetAllQueryKey, generateUseGetQueryKey } from '@/Helpers';
+import {
+    PaginateResponse,
+    ServiceHooks,
+    UseCreateOptions,
+    UseDeleteOptions,
+    UseGetAllOptions,
+    UseGetOptions,
+    UseUpdateOptions,
+} from '@/Support/Interfaces/Others';
+import { Resource } from '@/Support/Interfaces/Resources';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+type ExtendedResource<T> = T & Record<string, any>;
+
+export function serviceHooksFactory<T extends Resource>({ baseKey, baseRoute }: ServiceHooks) {
+    if (!baseKey) baseKey = baseRoute;
+
+    return {
+        getAll: async ({ filters, axiosRequestConfig }: UseGetAllOptions<T> = {}) => {
+            const url = route(\`\${baseRoute}.index\`);
+            const response = await window.axios.get(url, {
+                params: filters,
+                ...axiosRequestConfig,
+            });
+            return response.data;
+        },
+
+        useGetAll: ({ filters, axiosRequestConfig, useQueryOptions }: UseGetAllOptions<T> = {}) => {
+            const url = route(\`\${baseRoute}.index\`);
+
+            return useQuery<PaginateResponse<T>>({
+                queryKey: generateUseGetAllQueryKey(baseKey, filters),
+                queryFn: async () => {
+                    const response = await window.axios.get(url, {
+                        params: filters,
+                        ...axiosRequestConfig,
+                    });
+                    return response.data;
+                },
+                placeholderData: keepPreviousData,
+                ...useQueryOptions,
+            });
+        },
+
+        useGet: ({ id, axiosRequestConfig, useQueryOptions }: UseGetOptions<T>) => {
+            const url = route(\`\${baseRoute}.show\`, id);
+
+            return useQuery({
+                queryKey: generateUseGetQueryKey(baseKey, id),
+                queryFn: async () => {
+                    const response = await window.axios.get(url, axiosRequestConfig);
+                    return response.data;
+                },
+                enabled: !!id,
+                ...useQueryOptions,
+            });
+        },
+
+        useCreate: ({ axiosRequestConfig, useMutationOptions }: UseCreateOptions<T> = {}) => {
+            const queryClient = useQueryClient();
+
+            return useMutation<Partial<T>, Error, { data: Partial<ExtendedResource<T>> }>({
+                mutationFn: async ({ data }: { data: Partial<ExtendedResource<T>> }) => {
+                    const url = route(\`\${baseRoute}.store\`);
+                    const response = await window.axios.post(url, data, axiosRequestConfig);
+                    return response.data;
+                },
+                onSuccess: async (...args) => {
+                    await queryClient.invalidateQueries({ queryKey: [baseKey], exact: false });
+
+                    if (useMutationOptions?.onSuccess) {
+                        await useMutationOptions.onSuccess(...args);
+                    }
+                },
+                ...useMutationOptions,
+            });
+        },
+
+        useUpdate: ({ axiosRequestConfig, useMutationOptions }: UseUpdateOptions<T> = {}) => {
+            const queryClient = useQueryClient();
+
+            return useMutation<
+                Partial<T>,
+                Error,
+                { id: number; data: Partial<ExtendedResource<T>> }
+            >({
+                mutationFn: async ({
+                    id,
+                    data,
+                }: {
+                    id: number;
+                    data: Partial<ExtendedResource<T>>;
+                }) => {
+                    const url = route(\`\${baseRoute}.update\`, id);
+                    const response = await window.axios.post(url, data, {
+                        params: { _method: 'PUT' },
+                        ...axiosRequestConfig,
+                    });
+                    return response.data;
+                },
+                onSuccess: async (...args) => {
+                    await queryClient.invalidateQueries({ queryKey: [baseKey], exact: false });
+
+                    if (useMutationOptions?.onSuccess) {
+                        await useMutationOptions.onSuccess(...args);
+                    }
+                },
+                ...useMutationOptions,
+            });
+        },
+
+        useDelete: ({ axiosRequestConfig, useMutationOptions }: UseDeleteOptions<T> = {}) => {
+            const queryClient = useQueryClient();
+
+            return useMutation<Partial<T>, Error, { id: number }>({
+                mutationFn: async ({ id }: { id: number }) => {
+                    const url = route(\`\${baseRoute}.destroy\`, id);
+                    const response = await window.axios.post(
+                        url,
+                        { _method: 'DELETE' },
+                        axiosRequestConfig,
+                    );
+                    return response.data;
+                },
+                onSuccess: async (...args) => {
+                    await queryClient.invalidateQueries({ queryKey: [baseKey], exact: false });
+
+                    if (useMutationOptions?.onSuccess) {
+                        await useMutationOptions.onSuccess(...args);
+                    }
+                },
+                ...useMutationOptions,
+            });
+        },
+    };
+}`;
+
+    fs.writeFileSync(serviceHooksFactoryPath, serviceHooksFactoryContent);
+  }
+
+  /**
+   * Create helper functions for frontend
+   */
+  private async createHelperFunctions(projectRoot: string): Promise<void> {
+    const helpersDir = path.join(projectRoot, 'resources/js/Helpers');
+    if (!fs.existsSync(helpersDir)) {
+      fs.mkdirSync(helpersDir, { recursive: true });
     }
     
-    // Validate relationships if any
-    if (model.relationships && model.relationships.length > 0) {
-      for (const rel of model.relationships) {
-        if (!rel.type) {
-          throw new Error('Relationship type is required');
-        }
-        if (!rel.relatedModel) {
-          throw new Error('Related model is required for relationship');
-        }
-        // Check valid relationship types
-        const validTypes = ['hasOne', 'hasMany', 'belongsTo', 'belongsToMany'];
-        if (!validTypes.includes(rel.type)) {
-          throw new Error(`Invalid relationship type: "${rel.type}"`);
-        }
-      }
+    // Create the query key generators
+    const queryKeysPath = path.join(helpersDir, 'index.ts');
+    const queryKeysContent = `/**
+ * Generate a query key for fetching all items
+ */
+export function generateUseGetAllQueryKey(baseKey: string, filters?: Record<string, any>) {
+    if (!filters) return [baseKey, 'all'];
+    return [baseKey, 'all', filters];
+}
+
+/**
+ * Generate a query key for fetching a single item
+ */
+export function generateUseGetQueryKey(baseKey: string, id: number | string) {
+    return [baseKey, 'detail', id];
+}
+`;
+
+    fs.writeFileSync(queryKeysPath, queryKeysContent);
+  }
+
+  /**
+   * Create frontend interfaces
+   */
+  private async createFrontendInterfaces(projectRoot: string): Promise<void> {
+    // Create directories
+    const interfacesDir = path.join(projectRoot, 'resources/js/Support/Interfaces');
+    if (!fs.existsSync(interfacesDir)) {
+      fs.mkdirSync(interfacesDir, { recursive: true });
+    }
+    
+    const modelsDir = path.join(interfacesDir, 'Models');
+    if (!fs.existsSync(modelsDir)) {
+      fs.mkdirSync(modelsDir);
+    }
+    
+    const resourcesDir = path.join(interfacesDir, 'Resources');
+    if (!fs.existsSync(resourcesDir)) {
+      fs.mkdirSync(resourcesDir);
+    }
+    
+    const othersDir = path.join(interfacesDir, 'Others');
+    if (!fs.existsSync(othersDir)) {
+      fs.mkdirSync(othersDir);
+    }
+    
+    // Create base model interface
+    const modelInterfacePath = path.join(modelsDir, 'Model.ts');
+    const modelInterfaceContent = `export interface Model {
+    id: number;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
+}`;
+    fs.writeFileSync(modelInterfacePath, modelInterfaceContent);
+    
+    const modelIndexPath = path.join(modelsDir, 'index.ts');
+    fs.writeFileSync(modelIndexPath, "export * from './Model';\n");
+    
+    // Create base resource interface
+    const resourceInterfacePath = path.join(resourcesDir, 'Resource.ts');
+    const resourceInterfaceContent = `import { Model } from '../Models/Model';
+
+export interface Resource extends Model {
+    // Base resource properties
+}`;
+    fs.writeFileSync(resourceInterfacePath, resourceInterfaceContent);
+    
+    const resourceIndexPath = path.join(resourcesDir, 'index.ts');
+    fs.writeFileSync(resourceIndexPath, "export * from './Resource';\n");
+    
+    // Create other interfaces
+    const othersInterfacePath = path.join(othersDir, 'index.ts');
+    const othersInterfaceContent = `// Pagination interfaces
+export interface PaginateMetaLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+export interface PaginateMeta {
+    current_page: number;
+    from: number;
+    last_page: number;
+    links: PaginateMetaLink[];
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+}
+
+export interface PaginateResponse<T> {
+    data: T[];
+    meta: PaginateMeta;
+}
+
+// Service hooks interfaces
+export interface ServiceHooks {
+    baseKey: string;
+    baseRoute: string;
+}
+
+// Query options
+export interface UseGetAllOptions<T> {
+    filters?: Record<string, any>;
+    axiosRequestConfig?: any;
+    useQueryOptions?: any;
+}
+
+export interface UseGetOptions<T> {
+    id: number | string;
+    axiosRequestConfig?: any;
+    useQueryOptions?: any;
+}
+
+export interface UseCreateOptions<T> {
+    axiosRequestConfig?: any;
+    useMutationOptions?: any;
+}
+
+export interface UseUpdateOptions<T> {
+    axiosRequestConfig?: any;
+    useMutationOptions?: any;
+}
+
+export interface UseDeleteOptions<T> {
+    axiosRequestConfig?: any;
+    useMutationOptions?: any;
+}`;
+    fs.writeFileSync(othersInterfacePath, othersInterfaceContent);
+    
+    // Create constants directory and files
+    const constantsDir = path.join(projectRoot, 'resources/js/Support/Constants');
+    if (!fs.existsSync(constantsDir)) {
+      fs.mkdirSync(constantsDir, { recursive: true });
+    }
+    
+    // Create routes.ts
+    const routesPath = path.join(constantsDir, 'routes.ts');
+    const routesContent = `export const routes = {
+    // Define your routes constants here
+    // Example: USERS: 'users'
+};`;
+    
+    if (!fs.existsSync(routesPath)) {
+      fs.writeFileSync(routesPath, routesContent);
     }
   }
 
@@ -1202,10 +1524,13 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
     }
     
     const projectRoot = workspaceFolders[0].uri.fsPath;
+    
+    // Validate Laravel project
     this.validateLaravelProject(projectRoot);
+    
     return projectRoot;
   }
-
+  
   /**
    * Validate that the given path is a Laravel project
    */
@@ -1217,6 +1542,58 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
     
     if (!fs.existsSync(artisanPath) || !fs.existsSync(appDirPath) || !fs.existsSync(configDirPath)) {
       throw new Error(`The directory at "${projectRoot}" does not appear to be a valid Laravel project`);
+    }
+  }
+  
+  /**
+   * Validate model definition before generation
+   */
+  private validateModel(model: ModelDefinition): void {
+    if (!model.name) {
+      throw new Error('Model name is required');
+    }
+    
+    if (!/^[A-Z][a-zA-Z0-9]*$/.test(model.name)) {
+      throw new Error('Model name must be in PascalCase');
+    }
+    
+    if (!model.attributes || model.attributes.length === 0) {
+      throw new Error('At least one attribute is required');
+    }
+    
+    // Validate attributes
+    for (const attr of model.attributes) {
+      if (!attr.name) {
+        throw new Error('Attribute name is required');
+      }
+      
+      if (!attr.type) {
+        throw new Error(`Type is required for attribute "${attr.name}"`);
+      }
+      
+      // Check for valid attribute name format (snake_case)
+      if (!/^[a-z][a-z0-9_]*$/.test(attr.name)) {
+        throw new Error(`Attribute name "${attr.name}" must be in snake_case format`);
+      }
+    }
+    
+    // Validate relationships if any
+    if (model.relationships && model.relationships.length > 0) {
+      for (const rel of model.relationships) {
+        if (!rel.type) {
+          throw new Error('Relationship type is required');
+        }
+        
+        if (!rel.relatedModel) {
+          throw new Error('Related model is required for relationship');
+        }
+        
+        // Check valid relationship types
+        const validTypes = ['hasOne', 'hasMany', 'belongsTo', 'belongsToMany'];
+        if (!validTypes.includes(rel.type)) {
+          throw new Error(`Invalid relationship type: "${rel.type}"`);
+        }
+      }
     }
   }
 }

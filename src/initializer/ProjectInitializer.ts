@@ -138,9 +138,14 @@ export class ProjectInitializer {
   /**
    * Create BaseRepositoryInterface file
    */
-  private async createBaseRepositoryInterface(projectRoot: string): Promise<void> {
+  public async createBaseRepositoryInterface(projectRoot: string): Promise<void> {
     try {
-      const filePath = path.join(projectRoot, 'app/Support/Interfaces/Repositories/BaseRepositoryInterface.php');
+      const dirPath = path.join(projectRoot, 'app/Support/Interfaces/Repositories');
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      const filePath = path.join(dirPath, 'BaseRepositoryInterface.php');
       
       if (!fs.existsSync(filePath)) {
         const content = await this.templateEngine.getStubContent('backend/base-repository-interface');
@@ -148,15 +153,21 @@ export class ProjectInitializer {
       }
     } catch (error) {
       console.error('Error creating BaseRepositoryInterface:', error);
+      throw error;
     }
   }
 
   /**
    * Create BaseRepository file
    */
-  private async createBaseRepository(projectRoot: string): Promise<void> {
+  public async createBaseRepository(projectRoot: string): Promise<void> {
     try {
-      const filePath = path.join(projectRoot, 'app/Repositories/BaseRepository.php');
+      const dirPath = path.join(projectRoot, 'app/Repositories');
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      const filePath = path.join(dirPath, 'BaseRepository.php');
       
       if (!fs.existsSync(filePath)) {
         const content = await this.templateEngine.getStubContent('backend/base-repository');
@@ -164,13 +175,14 @@ export class ProjectInitializer {
       }
     } catch (error) {
       console.error('Error creating BaseRepository:', error);
+      throw error;
     }
   }
 
   /**
    * Create RepositoryServiceProvider file
    */
-  private async createRepositoryServiceProvider(projectRoot: string): Promise<void> {
+  public async createRepositoryServiceProvider(projectRoot: string): Promise<void> {
     try {
       const filePath = path.join(projectRoot, 'app/Providers/RepositoryServiceProvider.php');
       
@@ -183,13 +195,14 @@ export class ProjectInitializer {
       }
     } catch (error) {
       console.error('Error creating RepositoryServiceProvider:', error);
+      throw error;
     }
   }
 
   /**
    * Create IntentEnum file
    */
-  private async createIntentEnum(projectRoot: string): Promise<void> {
+  public async createIntentEnum(projectRoot: string): Promise<void> {
     try {
       const filePath = path.join(projectRoot, 'app/Support/Enums/IntentEnum.php');
       const dirPath = path.dirname(filePath);
@@ -204,13 +217,14 @@ export class ProjectInitializer {
       }
     } catch (error) {
       console.error('Error creating IntentEnum:', error);
+      throw error;
     }
   }
   
   /**
    * Create PermissionEnum file
    */
-  private async createPermissionEnum(projectRoot: string): Promise<void> {
+  public async createPermissionEnum(projectRoot: string): Promise<void> {
     try {
       const filePath = path.join(projectRoot, 'app/Support/Enums/PermissionEnum.php');
       const dirPath = path.dirname(filePath);
@@ -225,6 +239,7 @@ export class ProjectInitializer {
       }
     } catch (error) {
       console.error('Error creating PermissionEnum:', error);
+      throw error;
     }
   }
 
@@ -272,7 +287,7 @@ export class ProjectInitializer {
   /**
    * Create backend traits files
    */
-  private async createBackendTraits(projectRoot: string): Promise<void> {
+  public async createBackendTraits(projectRoot: string): Promise<void> {
     // Repository traits
     const repositoryTraits = [
       { name: 'HandlesFiltering', stub: 'backend/traits/repositories/handles-filtering' },
@@ -283,6 +298,11 @@ export class ProjectInitializer {
     
     for (const trait of repositoryTraits) {
       const filePath = path.join(projectRoot, `app/Traits/Repositories/${trait.name}.php`);
+      const dirPath = path.dirname(filePath);
+      
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
       
       if (!fs.existsSync(filePath)) {
         try {
@@ -301,6 +321,11 @@ export class ProjectInitializer {
     
     for (const trait of serviceTraits) {
       const filePath = path.join(projectRoot, `app/Traits/Services/${trait.name}.php`);
+      const dirPath = path.dirname(filePath);
+      
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
       
       if (!fs.existsSync(filePath)) {
         try {
@@ -319,6 +344,11 @@ export class ProjectInitializer {
     
     for (const trait of jsonResourceTraits) {
       const filePath = path.join(projectRoot, `app/Traits/Resources/JsonResource/${trait.name}.php`);
+      const dirPath = path.dirname(filePath);
+      
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
       
       if (!fs.existsSync(filePath)) {
         try {

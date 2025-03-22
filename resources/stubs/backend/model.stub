@@ -33,15 +33,5 @@ class {{modelName}} extends Model
         {{modelCasts}}
     ];
 
-    /**
-     * Get the table associated with the model.
-     *
-     * @return string
-     */
-    public function getTable()
-    {
-        return $this->table ?? '{{tableName}}';
-    }
-    
     {{modelRelationships}}
 }

@@ -5,108 +5,70 @@ namespace App\Http\Controllers;
 use App\Http\Requests\{{modelName}}\Store{{modelName}}Request;
 use App\Http\Requests\{{modelName}}\Update{{modelName}}Request;
 use App\Http\Resources\{{modelName}}Resource;
+use App\Models\{{modelName}};
+use App\Support\Enums\PermissionEnum;
 use App\Support\Interfaces\Services\{{modelName}}ServiceInterface;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
-class {{modelName}}Controller extends Controller
-{
-    /**
-     * Create a new controller instance.
-     */
-    public function __construct(
-        protected {{modelName}}ServiceInterface ${{modelCamelCase}}Service
-    ) {
+class {{modelName}}Controller extends Controller implements HasMiddleware {
+    public function __construct(protected {{modelName}}ServiceInterface ${{modelCamelCase}}Service) {}
+
+    public static function middleware(): array {
+        return [
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_CREATE->value], ['create', 'store']),
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_UPDATE->value], ['edit', 'update']),
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_READ->value], ['index', 'show']),
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_DELETE->value], ['destroy']),
+        ];
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request)
-    {
-        $perPage = $request->input('perPage', 15);
-        ${{modelPluralCamelCase}} = $this->{{modelCamelCase}}Service->getPaginated($request->all(), $perPage);
-        
-        return Inertia::render('{{modelName}}/Index', [
-            '{{modelPluralCamelCase}}' => {{modelName}}Resource::collection(${{modelPluralCamelCase}}),
-            'meta' => [
-                'title' => '{{modelName}} List',
-            ],
-        ]);
+    public function index(Request $request) {
+        $perPage = $request->get('perPage', 10);
+        $data = {{modelName}}Resource::collection($this->{{modelCamelCase}}Service->getAllPaginated($request->query(), $perPage));
+
+        if ($this->ajax()) {
+            return $data;
+        }
+
+        return inertia('{{modelName}}/Index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return Inertia::render('{{modelName}}/Create', [
-            'meta' => [
-                'title' => 'Create {{modelName}}',
-            ],
-        ]);
+    public function create() {
+        return inertia('{{modelName}}/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Store{{modelName}}Request $request)
-    {
-        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->create($request->validated());
-        
-        return redirect()->route('{{modelSnakeCase}}.index')
-            ->with('success', '{{modelName}} created successfully.');
+    public function store(Store{{modelName}}Request $request) {
+        if ($this->ajax()) {
+            return $this->{{modelCamelCase}}Service->create($request->validated());
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->findOrFail($id);
-        
-        return Inertia::render('{{modelName}}/Show', [
-            '{{modelCamelCase}}' => new {{modelName}}Resource(${{modelCamelCase}}),
-            'meta' => [
-                'title' => 'View {{modelName}}',
-            ],
-        ]);
+    public function show({{modelName}} ${{modelCamelCase}}) {
+        $data = {{modelName}}Resource::make(${{modelCamelCase}});
+
+        if ($this->ajax()) {
+            return $data;
+        }
+
+        return inertia('{{modelName}}/Show', compact('data'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->findOrFail($id);
-        
-        return Inertia::render('{{modelName}}/Edit', [
-            '{{modelCamelCase}}' => new {{modelName}}Resource(${{modelCamelCase}}),
-            'meta' => [
-                'title' => 'Edit {{modelName}}',
-            ],
-        ]);
+    public function edit({{modelName}} ${{modelCamelCase}}) {
+        $data = {{modelName}}Resource::make(${{modelCamelCase}});
+
+        return inertia('{{modelName}}/Edit', compact('data'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Update{{modelName}}Request $request, string $id)
-    {
-        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->update($id, $request->validated());
-        
-        return redirect()->route('{{modelSnakeCase}}.index')
-            ->with('success', '{{modelName}} updated successfully.');
+    public function update(Update{{modelName}}Request $request, {{modelName}} ${{modelCamelCase}}) {
+        if ($this->ajax()) {
+            return $this->{{modelCamelCase}}Service->update(${{modelCamelCase}}, $request->validated());
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        $this->{{modelCamelCase}}Service->delete($id);
-        
-        return redirect()->route('{{modelSnakeCase}}.index')
-            ->with('success', '{{modelName}} deleted successfully.');
+    public function destroy({{modelName}} ${{modelCamelCase}}) {
+        if ($this->ajax()) {
+            return $this->{{modelCamelCase}}Service->delete(${{modelCamelCase}});
+        }
     }
 }

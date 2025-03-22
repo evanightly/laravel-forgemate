@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Support\Enums;
+
+/**
+ * Intent enum for custom operations
+ * 
+ * @package App\Support\Enums
+ * @generated Laravel Forgemate Initializer
+ */
+enum IntentEnum: string
+{
+    // Custom actions
+    case CUSTOM_ACTION = 'custom_action';
+    
+    // Add your custom intents here
+}
