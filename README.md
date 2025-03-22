@@ -67,34 +67,54 @@ Click "Generate Scaffold" and the extension will create:
 
 ## Template Variables
 
-The extension supports numerous template variables for custom stubs:
+Using this sample model for examples:
+
+**Model: WarehouseItem**  
+**Attributes:**
+- title (string)  
+- description (text)  
+- qty (integer)  
 
 ### General Naming Variables
-- `{{model}}` - Raw model name (e.g. ArticleNews)
-- `{{modelLowercase}}` - Lowercase name
-- `{{modelUppercase}}` - Uppercase name
-- `{{modelCamelCase}}` - camelCase name
-- `{{modelPascalCase}}` - PascalCase name
-- `{{modelSnakeCase}}` - snake_case name
-- `{{modelKebabCase}}` - kebab-case name
-- `{{modelUpperSnakeCase}}` - UPPER_SNAKE_CASE name
+
+| Variable | Description | Example Value |
+|----------|-------------|--------------|
+| {{modelName}} | Raw model name | WarehouseItem |
+| {{modelLowercase}} | Lowercase name | warehouseitem |
+| {{modelUppercase}} | Uppercase name | WAREHOUSEITEM |
+| {{modelCamelCase}} | camelCase name | warehouseItem |
+| {{modelPascalCase}} | PascalCase name | WarehouseItem |
+| {{modelSnakeCase}} | snake_case name | warehouse_item |
+| {{modelKebabCase}} | kebab-case name | warehouse-item |
+| {{modelUpperSnakeCase}} | UPPER_SNAKE_CASE name | WAREHOUSE_ITEM |
 
 ### Pluralization Variables
-- `{{modelPlural}}` - Pluralized name
-- `{{modelPluralLowercase}}` - Lowercase plural
-- `{{tableName}}` - Database table name (plural snake_case)
+
+| Variable | Description | Example Value |
+|----------|-------------|--------------|
+| {{modelPlural}} | Pluralized name | WarehouseItems |
+| {{modelPluralLowercase}} | Lowercase plural | warehouseitems |
+| {{tableName}} | Database table name (plural snake_case) | warehouse_items |
 
 ### Attribute Variables
-- `{{modelStringAttributesWithComma}}` - Comma-separated list of attributes
-- `{{modelStringAttributesWithCommaQuoted}}` - Quoted comma-separated list of attributes
-- `{{migrationColumns}}` - Full migration column definitions
-- `{{tsInterfaceProperties}}` - TypeScript interface properties
-- `{{requestRules}}` - Laravel validation rules
-- `{{factoryDefinitions}}` - Factory definitions for each attribute
-- `{{resourceAttributes}}` - Resource attributes
-- `{{resourceRelationships}}` - Resource relationships
-- `{{modelCasts}}` - Model attribute casting
-- `{{modelRelationships}}` - Model relationship methods
+
+| Variable | Description | Example Value |
+|----------|-------------|--------------|
+| {{modelStringAttributesWithComma}} | Comma-separated list of attributes | title, description, qty |
+| {{modelStringAttributesWithCommaQuoted}} | Quoted comma-separated list of attributes | 'title', 'description', 'qty' |
+| {{tsInterfaceProperties}} | TypeScript interface properties | title: string;<br>description: string;<br>qty: number; |
+| {{requestRules}} | Laravel validation rules | 'title' => 'required\|string\|max:255',<br>'description' => 'nullable\|string',<br>'qty' => 'required\|integer', |
+| {{factoryDefinitions}} | Factory definitions | 'title' => $this->faker->word(),<br>'description' => $this->faker->text(),<br>'qty' => $this->faker->numberBetween(1, 100), |
+| {{migrationColumns}} | Full migration column definitions | $table->string('title');<br>$table->text('description')->nullable();<br>$table->integer('qty'); |
+| {{resourceAttributes}} | Resource attributes | 'title' => $this->title,<br>'description' => $this->description,<br>'qty' => $this->qty, |
+| {{modelCasts}} | Model attribute casting | 'qty' => 'integer', |
+
+### Relationship Variables
+
+| Variable | Description | Example Value |
+|----------|-------------|--------------|
+| {{modelRelationships}} | Model relationship methods | public function category()<br>{<br>    return $this->belongsTo(Category::class);<br>} |
+| {{resourceRelationships}} | Resource relationships | 'category' => CategoryResource::make($this->whenLoaded('category')), |
 
 ## Customizing Stubs
 
