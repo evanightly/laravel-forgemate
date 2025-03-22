@@ -2,6 +2,8 @@
 
 A powerful VS Code extension for automatically generating Laravel scaffolding with service-repository pattern support for both backend and frontend layers.
 
+![Laravel Forgemate Demo](resources/images/laravel-forgemate-demo.gif)
+
 ## Key Features
 
 - Dynamic scaffolding based on your model structure
@@ -11,11 +13,32 @@ A powerful VS Code extension for automatically generating Laravel scaffolding wi
 - Intelligent relationship handling
 - UI for visually creating your models
 
+## Laravel Compatibility
+
+### Laravel 11+ Support
+
+Laravel Forgemate fully supports Laravel 11+ with the following enhancements:
+
+| Feature | Description |
+|---------|-------------|
+| New Directory Structure | Automatically adapts to Laravel 11's streamlined directory structure |
+| PHP 8.2+ Compatibility | All generated code uses PHP 8.2+ syntax and features |
+| Invokable Controllers | Option to generate single-action invokable controllers |
+| Pest Testing | Support for generating Pest test files instead of PHPUnit |
+| Route Attributes | Support for PHP attributes-based routing in controllers |
+
+### Minimum Requirements
+
+- Laravel 9.0+
+- PHP 8.1+ (PHP 8.2+ recommended for Laravel 11)
+- Node.js 16+ for frontend assets
+- VS Code 1.85.0+
+
 ## Installation
 
 1. Install the extension from VS Code Marketplace
 2. Open your Laravel project in VS Code
-3. Initialize your project structure with `Laravel Forgemate: Initialize Project`
+3. (optional) Initialize your project structure with `Laravel Forgemate: Initialize Project`
 
 ## Quick Start
 
