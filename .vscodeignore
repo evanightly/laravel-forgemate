@@ -1,0 +1,35 @@
+# Source files
+src/**
+tsconfig.json
+.eslintrc.json
+
+# Development files
+.vscode/**
+.vscode-test/**
+.gitignore
+node_modules/**
+
+# Build process
+.github/**
+.git/**
+**/*.ts
+**/*.map
+
+# Exclude all .js files...
+**/*.js
+# ...except the extension entrypoint
+!out/**/*.js
+
+# Additional development files
+.editorconfig
+.eslintignore
+.prettierrc
+webpack.config.js
+.travis.yml
+.azure-pipelines.yml
+
+# Misc
+.yarnrc
+.npmrc
+*.vsix
+*.log
