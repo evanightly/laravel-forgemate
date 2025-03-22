@@ -4,6 +4,12 @@ namespace App\Traits\Repositories;
 
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Trait for handling query filtering
+ * 
+ * @package App\Traits\Repositories
+ * @generated Laravel Forgemate Initializer
+ */
 trait HandlesFiltering {
     /**
      * Apply filters to the query based on search parameter.

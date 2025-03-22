@@ -3,615 +3,101 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { TemplateEngine } from '../engine/TemplateEngine';
 
+/**
+ * Handles project initialization
+ */
 export class ProjectInitializer {
-  constructor(
-    private context: vscode.ExtensionContext,
-    private templateEngine: TemplateEngine
-  ) {}
+  /**
+   * Constructor
+   */
+  constructor(private context: vscode.ExtensionContext, private templateEngine: TemplateEngine) {}
 
   /**
-   * Initialize a Laravel project with service repository pattern base files
+   * Initialize a new Laravel project with all required files
    */
   public async initialize(): Promise<void> {
-    const config = vscode.workspace.getConfiguration('laravelForgemate');
-    const laravelProjectPath = config.get<string>('laravelProjectPath', '');
-    
-    const projectRoot = this.getProjectRoot(laravelProjectPath);
-    
-    // Ensure the project is a Laravel project
-    this.validateLaravelProject(projectRoot);
-    
-    // Create necessary base files and directories
-    await this.initializeBackend(projectRoot);
-    await this.initializeFrontend(projectRoot);
-    await this.synchronizeStubs();
-  }
-
-  /**
-   * Synchronize stub files to the project
-   */
-  public async synchronizeStubs(): Promise<void> {
-    const config = vscode.workspace.getConfiguration('laravelForgemate');
-    const laravelProjectPath = config.get<string>('laravelProjectPath', '');
-    const stubsDirectory = config.get<string>('stubsDirectory', 'stubs/scaffold');
-    
-    const projectRoot = this.getProjectRoot(laravelProjectPath);
-    const targetStubsDirectory = path.join(projectRoot, stubsDirectory);
-    
-    // Create stubs directory if it doesn't exist
-    if (!fs.existsSync(targetStubsDirectory)) {
-      fs.mkdirSync(targetStubsDirectory, { recursive: true });
-    }
-    
-    // Copy default stubs to project
-    const defaultStubsDirectory = this.context.asAbsolutePath('resources/stubs');
-    
-    this.copyDirectory(defaultStubsDirectory, targetStubsDirectory);
-    
-    return Promise.resolve();
-  }
-
-  /**
-   * Initialize backend service repository pattern files
-   */
-  private async initializeBackend(projectRoot: string): Promise<void> {
-    // Create necessary directories
-    const directories = [
-      'app/Repositories',
-      'app/Services',
-      'app/Traits/Repositories',
-      'app/Traits/Services',
-      'app/Support/Interfaces/Repositories',
-      'app/Support/Interfaces/Services',
-      'app/Traits/Resources/JsonResource'
-    ];
-    
-    directories.forEach(dir => {
-      const fullPath = path.join(projectRoot, dir);
-      if (!fs.existsSync(fullPath)) {
-        fs.mkdirSync(fullPath, { recursive: true });
-      }
-    });
-    
-    // Create base repository interface
-    await this.createBaseRepositoryInterface(projectRoot);
-    
-    // Create base repository implementation
-    await this.createBaseRepository(projectRoot);
-    
-    // Create repository service provider
-    await this.createRepositoryServiceProvider(projectRoot);
-    
-    // Create traits
-    await this.createBackendTraits(projectRoot);
-    
-    // Create IntentEnum.php
-    await this.createIntentEnum(projectRoot);
-    
-    // Create Permission enum
-    await this.createPermissionEnum(projectRoot);
-  }
-
-  /**
-   * Initialize frontend files for service repository pattern
-   */
-  private async initializeFrontend(projectRoot: string): Promise<void> {
-    // Create necessary directories
-    const directories = [
-      'resources/js/Services',
-      'resources/js/Support/Interfaces/Models',
-      'resources/js/Support/Interfaces/Resources',
-      'resources/js/Support/Interfaces/Others',
-      'resources/js/Support/Constants',
-      'resources/js/Helpers'
-    ];
-    
-    directories.forEach(dir => {
-      const fullPath = path.join(projectRoot, dir);
-      if (!fs.existsSync(fullPath)) {
-        fs.mkdirSync(fullPath, { recursive: true });
-      }
-    });
-    
-    // Create service hooks factory
-    await this.createServiceHooksFactory(projectRoot);
-    
-    // Create model interface
-    await this.createModelInterface(projectRoot);
-    
-    // Create resource interface
-    await this.createResourceInterface(projectRoot);
-    
-    // Create routes
-    await this.createRoutes(projectRoot);
-    
-    // Create helpers
-    await this.createHelpers(projectRoot);
-    
-    // Create support interfaces
-    await this.createSupportInterfaces(projectRoot);
-
-    // Setup vite plugins for enum generation
-    await this.setupVitePlugins(projectRoot);
-  }
-
-  /**
-   * Create BaseRepositoryInterface file
-   */
-  public async createBaseRepositoryInterface(projectRoot: string): Promise<void> {
     try {
-      const dirPath = path.join(projectRoot, 'app/Support/Interfaces/Repositories');
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
+      // Set up initializer stubs directory first
+      await this.setupInitializerStubs();
       
-      const filePath = path.join(dirPath, 'BaseRepositoryInterface.php');
+      // Read configuration
+      const config = vscode.workspace.getConfiguration('laravelForgemate');
+      const laravelProjectPath = config.get<string>('laravelProjectPath', '');
       
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('backend/base-repository-interface');
-        fs.writeFileSync(filePath, content);
-      }
+      // Get project root
+      const projectRoot = this.getProjectRoot(laravelProjectPath);
+      
+      // Create backend files
+      await this.createBackendFiles(projectRoot);
+      
+      // Create frontend files
+      await this.createFrontendFiles(projectRoot);
+      
+      // Show success message
+      vscode.window.showInformationMessage('Laravel project initialized successfully!');
     } catch (error) {
-      console.error('Error creating BaseRepositoryInterface:', error);
+      console.error('Error initializing project:', error);
+      
+      // Show error message
+      vscode.window.showErrorMessage(`Error initializing project: ${(error as Error).message}`);
       throw error;
     }
   }
 
   /**
-   * Create BaseRepository file
+   * Setup initializer stubs directory structure
    */
-  public async createBaseRepository(projectRoot: string): Promise<void> {
+  public async setupInitializerStubs(): Promise<void> {
     try {
-      const dirPath = path.join(projectRoot, 'app/Repositories');
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
+      const initializeStubsDir = path.join(this.context.extensionUri.fsPath, 'resources/stubs/initializers');
       
-      const filePath = path.join(dirPath, 'BaseRepository.php');
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('backend/base-repository');
-        fs.writeFileSync(filePath, content);
+      // Create main initializers directory if it doesn't exist
+      if (!fs.existsSync(initializeStubsDir)) {
+        fs.mkdirSync(initializeStubsDir, { recursive: true });
       }
-    } catch (error) {
-      console.error('Error creating BaseRepository:', error);
-      throw error;
-    }
-  }
 
-  /**
-   * Create RepositoryServiceProvider file
-   */
-  public async createRepositoryServiceProvider(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'app/Providers/RepositoryServiceProvider.php');
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('backend/repository-service-provider');
-        fs.writeFileSync(filePath, content);
-        
-        // Register the service provider in config/app.php
-        this.registerServiceProvider(projectRoot);
-      }
-    } catch (error) {
-      console.error('Error creating RepositoryServiceProvider:', error);
-      throw error;
-    }
-  }
+      // Create subdirectories for backend files
+      const backendDirs = [
+        'backend/traits/repositories',
+        'backend/traits/services',
+        'backend/traits/resources/json_resource',
+        'backend/support/enums',
+        'backend/support/interfaces/repositories'
+      ];
 
-  /**
-   * Create IntentEnum file
-   */
-  public async createIntentEnum(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'app/Support/Enums/IntentEnum.php');
-      const dirPath = path.dirname(filePath);
-      
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('backend/enums/intent-enum');
-        fs.writeFileSync(filePath, content);
-      }
+      backendDirs.forEach(dir => {
+        const fullPath = path.join(initializeStubsDir, dir);
+        if (!fs.existsSync(fullPath)) {
+          fs.mkdirSync(fullPath, { recursive: true });
+        }
+      });
+
+      // Create subdirectories for frontend files
+      const frontendDirs = [
+        'frontend/support/constants',
+        'frontend/support/interfaces/others',
+        'frontend/support/interfaces/resources',
+        'frontend/support/interfaces/models',
+        'frontend/services',
+        'frontend/helpers'
+      ];
+
+      frontendDirs.forEach(dir => {
+        const fullPath = path.join(initializeStubsDir, dir);
+        if (!fs.existsSync(fullPath)) {
+          fs.mkdirSync(fullPath, { recursive: true });
+        }
+      });
+
+      return Promise.resolve();
     } catch (error) {
-      console.error('Error creating IntentEnum:', error);
-      throw error;
+      console.error('Error setting up initializer stubs directory:', error);
+      return Promise.reject(error);
     }
   }
   
   /**
-   * Create PermissionEnum file
-   */
-  public async createPermissionEnum(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'app/Support/Enums/PermissionEnum.php');
-      const dirPath = path.dirname(filePath);
-      
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('backend/enums/permission-enum');
-        fs.writeFileSync(filePath, content);
-      }
-    } catch (error) {
-      console.error('Error creating PermissionEnum:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Register the RepositoryServiceProvider in config/app.php
-   */
-  private registerServiceProvider(projectRoot: string): void {
-    try {
-      const appConfigPath = path.join(projectRoot, 'config/app.php');
-      
-      if (fs.existsSync(appConfigPath)) {
-        let content = fs.readFileSync(appConfigPath, 'utf-8');
-        
-        // Check if the provider is already registered
-        if (!content.includes('App\\Providers\\RepositoryServiceProvider::class')) {
-          // Find the providers array
-          const providersRegex = /'providers'\s*=>\s*\[([\s\S]*?)\]/m;
-          const match = content.match(providersRegex);
-          
-          if (match && match[1]) {
-            // Add our provider to the end of the array
-            const newContent = content.replace(
-              providersRegex,
-              (fullMatch, providersContent) => {
-                // Check if the last line already has a comma
-                const lastLine = providersContent.trim().split('\n').pop()?.trim();
-                const comma = lastLine && lastLine.endsWith(',') ? '' : ',';
-                
-                return fullMatch.replace(
-                  ']',
-                  `${comma}\n        App\\Providers\\RepositoryServiceProvider::class,\n    ]`
-                );
-              }
-            );
-            
-            fs.writeFileSync(appConfigPath, newContent);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error registering service provider:', error);
-    }
-  }
-
-  /**
-   * Create backend traits files
-   */
-  public async createBackendTraits(projectRoot: string): Promise<void> {
-    // Repository traits
-    const repositoryTraits = [
-      { name: 'HandlesFiltering', stub: 'backend/traits/repositories/handles-filtering' },
-      { name: 'HandlesRelations', stub: 'backend/traits/repositories/handles-relations' },
-      { name: 'HandlesSorting', stub: 'backend/traits/repositories/handles-sorting' },
-      { name: 'RelationQueryable', stub: 'backend/traits/repositories/relation-queryable' }
-    ];
-    
-    for (const trait of repositoryTraits) {
-      const filePath = path.join(projectRoot, `app/Traits/Repositories/${trait.name}.php`);
-      const dirPath = path.dirname(filePath);
-      
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(trait.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${trait.name}:`, error);
-        }
-      }
-    }
-    
-    // Service traits
-    const serviceTraits = [
-      { name: 'HandlesPageSizeAll', stub: 'backend/traits/services/handles-page-size-all' }
-    ];
-    
-    for (const trait of serviceTraits) {
-      const filePath = path.join(projectRoot, `app/Traits/Services/${trait.name}.php`);
-      const dirPath = path.dirname(filePath);
-      
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(trait.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${trait.name}:`, error);
-        }
-      }
-    }
-    
-    // JsonResource traits
-    const jsonResourceTraits = [
-      { name: 'HandlesResourceDataSelection', stub: 'backend/traits/json_resource/handles-resource-data-selection' }
-    ];
-    
-    for (const trait of jsonResourceTraits) {
-      const filePath = path.join(projectRoot, `app/Traits/Resources/JsonResource/${trait.name}.php`);
-      const dirPath = path.dirname(filePath);
-      
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-      }
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(trait.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${trait.name}:`, error);
-        }
-      }
-    }
-  }
-
-  /**
-   * Create ServiceHooksFactory file
-   */
-  private async createServiceHooksFactory(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'resources/js/Services/serviceHooksFactory.ts');
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('frontend/service-hooks-factory');
-        fs.writeFileSync(filePath, content);
-      }
-    } catch (error) {
-      console.error('Error creating ServiceHooksFactory:', error);
-    }
-  }
-
-  /**
-   * Create Model interface file
-   */
-  private async createModelInterface(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'resources/js/Support/Interfaces/Models/Model.ts');
-      const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Models/index.ts');
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('frontend/model-interface');
-        fs.writeFileSync(filePath, content);
-      }
-      
-      if (!fs.existsSync(indexPath)) {
-        fs.writeFileSync(indexPath, "export * from './Model';\n");
-      }
-    } catch (error) {
-      console.error('Error creating Model interface:', error);
-    }
-  }
-
-  /**
-   * Create Resource interface file
-   */
-  private async createResourceInterface(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'resources/js/Support/Interfaces/Resources/Resource.ts');
-      const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Resources/index.ts');
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('frontend/resource-interface');
-        fs.writeFileSync(filePath, content);
-      }
-      
-      if (!fs.existsSync(indexPath)) {
-        fs.writeFileSync(indexPath, "export * from './Resource';\n");
-      }
-    } catch (error) {
-      console.error('Error creating Resource interface:', error);
-    }
-  }
-
-  /**
-   * Create Routes file
-   */
-  private async createRoutes(projectRoot: string): Promise<void> {
-    try {
-      const filePath = path.join(projectRoot, 'resources/js/Support/Constants/routes.ts');
-      
-      if (!fs.existsSync(filePath)) {
-        const content = await this.templateEngine.getStubContent('frontend/routes');
-        fs.writeFileSync(filePath, content);
-      }
-    } catch (error) {
-      console.error('Error creating Routes:', error);
-    }
-  }
-
-  /**
-   * Create Helper files
-   */
-  private async createHelpers(projectRoot: string): Promise<void> {
-    const helpers = [
-      { name: 'addRippleEffect', stub: 'frontend/helpers/add-ripple-effect' },
-      { name: 'generateDynamicBreadcrumbs', stub: 'frontend/helpers/generate-dynamic-breadcrumbs' },
-      { name: 'generateServiceHooksFactoryQueryKey', stub: 'frontend/helpers/generate-service-hooks-factory-query-key' },
-      { name: 'tanstackQueryHelpers', stub: 'frontend/helpers/tanstack-query-helpers' }
-    ];
-    
-    for (const helper of helpers) {
-      const filePath = path.join(projectRoot, `resources/js/Helpers/${helper.name}.ts`);
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(helper.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${helper.name}:`, error);
-        }
-      }
-    }
-    
-    // Create index file to export all helpers
-    const indexPath = path.join(projectRoot, 'resources/js/Helpers/index.ts');
-    
-    if (!fs.existsSync(indexPath)) {
-      const exports = helpers.map(h => `export * from './${h.name}';`).join('\n');
-      fs.writeFileSync(indexPath, exports + '\n');
-    }
-  }
-
-  /**
-   * Create Support Interface files
-   */
-  private async createSupportInterfaces(projectRoot: string): Promise<void> {
-    const interfaceItems = [
-      { name: 'GenericBreadcrumbItem', stub: 'frontend/others/generic-breadcrumb-item' },
-      { name: 'PaginateMeta', stub: 'frontend/others/paginate-meta' },
-      { name: 'PaginateMetaLink', stub: 'frontend/others/paginate-meta-link' },
-      { name: 'PaginateResponse', stub: 'frontend/others/paginate-response' },
-      { name: 'ServiceFilterOptions', stub: 'frontend/others/service-filter-options' },
-      { name: 'ServiceHooksFactory', stub: 'frontend/others/service-hooks-factory' }
-    ];
-    
-    for (const item of interfaceItems) {
-      const filePath = path.join(projectRoot, `resources/js/Support/Interfaces/Others/${item.name}.ts`);
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(item.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${item.name}:`, error);
-        }
-      }
-    }
-    
-    // Create index file to export all interfaces
-    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Others/index.ts');
-    
-    if (!fs.existsSync(indexPath)) {
-      const exports = interfaceItems.map(i => `export * from './${i.name}';`).join('\n');
-      fs.writeFileSync(indexPath, exports + '\n');
-    }
-  }
-
-  /**
-   * Setup Vite plugins for enum generation
-   */
-  private async setupVitePlugins(projectRoot: string): Promise<void> {
-    const vitePluginsDir = path.join(projectRoot, 'vite_plugins');
-    const viteLibDir = path.join(vitePluginsDir, 'lib');
-    
-    // Create directories if they don't exist
-    if (!fs.existsSync(vitePluginsDir)) {
-      fs.mkdirSync(vitePluginsDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(viteLibDir)) {
-      fs.mkdirSync(viteLibDir, { recursive: true });
-    }
-    
-    // Create utility libraries
-    const libFiles = [
-      { name: 'colors', stub: 'frontend/vite_plugins/lib/colors' },
-      { name: 'generatePrefixText', stub: 'frontend/vite_plugins/lib/generate-prefix-text' },
-      { name: 'getCurrentTimestamp', stub: 'frontend/vite_plugins/lib/get-current-timestamp' }
-    ];
-    
-    for (const lib of libFiles) {
-      const filePath = path.join(viteLibDir, `${lib.name}.js`);
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(lib.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${lib.name}:`, error);
-        }
-      }
-    }
-    
-    // Create plugin files
-    const plugins = [
-      { name: 'checkRoutesOverridePlugin', stub: 'frontend/vite_plugins/check-routes-override-plugin' },
-      { name: 'transformIntentEnumPlugin', stub: 'frontend/vite_plugins/transform-intent-enum-plugin' }
-    ];
-    
-    for (const plugin of plugins) {
-      const filePath = path.join(vitePluginsDir, `${plugin.name}.js`);
-      
-      if (!fs.existsSync(filePath)) {
-        try {
-          const content = await this.templateEngine.getStubContent(plugin.stub);
-          fs.writeFileSync(filePath, content);
-        } catch (error) {
-          console.error(`Error creating ${plugin.name}:`, error);
-        }
-      }
-    }
-    
-    // Update vite.config.ts if it exists
-    this.updateViteConfig(projectRoot);
-  }
-
-  /**
-   * Update Vite config to include our plugins
-   */
-  private updateViteConfig(projectRoot: string): void {
-    try {
-      const viteConfigPath = path.join(projectRoot, 'vite.config.ts');
-      
-      if (fs.existsSync(viteConfigPath)) {
-        let content = fs.readFileSync(viteConfigPath, 'utf-8');
-        
-        // Check if our plugins are already included
-        if (!content.includes('transformIntentEnumPlugin')) {
-          // Check for plugins section in the configuration
-          if (content.includes('plugins: [')) {
-            const newContent = content.replace(
-              'plugins: [',
-              `plugins: [
-    transformIntentEnumPlugin(),
-    checkRoutesOverridePlugin(),`
-            );
-            
-            // Add imports if needed
-            if (!content.includes('import transformIntentEnumPlugin')) {
-              const importStr = `import transformIntentEnumPlugin from './vite_plugins/transformIntentEnumPlugin';\nimport checkRoutesOverridePlugin from './vite_plugins/checkRoutesOverridePlugin';\n`;
-              
-              // Find a good place to add imports
-              if (content.includes('import { defineConfig }')) {
-                newContent.replace(
-                  'import { defineConfig }',
-                  importStr + 'import { defineConfig }'
-                );
-              } else {
-                // Just add at the beginning
-                const updatedContent = importStr + newContent;
-                fs.writeFileSync(viteConfigPath, updatedContent);
-                return;
-              }
-            }
-            
-            fs.writeFileSync(viteConfigPath, newContent);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error updating Vite config:', error);
-    }
-  }
-
-  /**
-   * Get the project root directory
+   * Get project root from config or workspace
    */
   private getProjectRoot(customPath: string): string {
     if (customPath && fs.existsSync(customPath)) {
@@ -623,7 +109,12 @@ export class ProjectInitializer {
       throw new Error('No workspace folder or Laravel project path found');
     }
     
-    return workspaceFolders[0].uri.fsPath;
+    const projectRoot = workspaceFolders[0].uri.fsPath;
+    
+    // Validate Laravel project
+    this.validateLaravelProject(projectRoot);
+    
+    return projectRoot;
   }
 
   /**
@@ -641,35 +132,603 @@ export class ProjectInitializer {
   }
 
   /**
-   * Copy directory and its contents recursively
+   * Create all backend files
    */
-  private copyDirectory(source: string, target: string): void {
-    // Check if source exists
-    if (!fs.existsSync(source)) {
-      return;
-    }
+  private async createBackendFiles(projectRoot: string): Promise<void> {
+    // Create backend directories
+    const backendDirs = [
+      'app/Support/Interfaces/Repositories',
+      'app/Support/Interfaces/Services',
+      'app/Services',
+      'app/Repositories',
+      'app/Support/Enums',
+      'app/Traits/Repositories',
+      'app/Traits/Services',
+      'app/Traits/Resources/JsonResource'
+    ];
+
+    backendDirs.forEach(dir => {
+      const dirPath = path.join(projectRoot, dir);
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+    });
+
+    // Create base repository files
+    await this.createBaseRepositoryInterface(projectRoot);
+    await this.createBaseRepository(projectRoot);
+    await this.createRepositoryServiceProvider(projectRoot);
     
-    // Create target directory if it doesn't exist
-    if (!fs.existsSync(target)) {
-      fs.mkdirSync(target, { recursive: true });
-    }
+    // Create traits
+    await this.createBackendTraits(projectRoot);
     
-    // Get all files and directories in the source
-    const entries = fs.readdirSync(source, { withFileTypes: true });
+    // Create enums
+    await this.createIntentEnum(projectRoot);
+    await this.createPermissionEnum(projectRoot);
+  }
+
+  /**
+   * Create all frontend files
+   */
+  private async createFrontendFiles(projectRoot: string): Promise<void> {
+    // Create frontend directories
+    const frontendDirs = [
+      'resources/js/Support/Interfaces/Models',
+      'resources/js/Support/Interfaces/Resources',
+      'resources/js/Support/Interfaces/Others',
+      'resources/js/Support/Constants',
+      'resources/js/Services',
+      'resources/js/Helpers'
+    ];
+
+    frontendDirs.forEach(dir => {
+      const dirPath = path.join(projectRoot, dir);
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+    });
+
+    // Create frontend model interfaces
+    await this.createModelInterfaces(projectRoot);
     
-    for (const entry of entries) {
-      const sourcePath = path.join(source, entry.name);
-      const targetPath = path.join(target, entry.name);
+    // Create frontend resource interfaces
+    await this.createResourceInterfaces(projectRoot);
+    
+    // Create other interfaces
+    await this.createOtherInterfaces(projectRoot);
+    
+    // Create constants
+    await this.createConstants(projectRoot);
+    
+    // Create service hooks factory
+    await this.createServiceHooksFactory(projectRoot);
+    
+    // Create helpers
+    await this.createHelpers(projectRoot);
+  }
+  
+  /**
+   * Create base repository interface
+   */
+  public async createBaseRepositoryInterface(projectRoot: string): Promise<void> {
+    try {
+      const dirPath = path.join(projectRoot, 'app/Support/Interfaces/Repositories');
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
       
-      if (entry.isDirectory()) {
-        // Recursively copy directory
-        this.copyDirectory(sourcePath, targetPath);
-      } else {
-        // Copy file if it doesn't exist or force overwrite is enabled
-        if (!fs.existsSync(targetPath)) {
-          fs.copyFileSync(sourcePath, targetPath);
+      const filePath = path.join(dirPath, 'BaseRepositoryInterface.php');
+      
+      if (!fs.existsSync(filePath)) {
+        const content = await this.templateEngine.getStubContent('initializers/backend/base-repository-interface');
+        fs.writeFileSync(filePath, content);
+      }
+    } catch (error) {
+      console.error('Error creating BaseRepositoryInterface:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Create base repository
+   */
+  public async createBaseRepository(projectRoot: string): Promise<void> {
+    try {
+      const dirPath = path.join(projectRoot, 'app/Repositories');
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      const filePath = path.join(dirPath, 'BaseRepository.php');
+      
+      if (!fs.existsSync(filePath)) {
+        const content = await this.templateEngine.getStubContent('initializers/backend/base-repository');
+        fs.writeFileSync(filePath, content);
+      }
+    } catch (error) {
+      console.error('Error creating BaseRepository:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Create repository service provider
+   */
+  public async createRepositoryServiceProvider(projectRoot: string): Promise<void> {
+    try {
+      const dirPath = path.join(projectRoot, 'app/Providers');
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      const filePath = path.join(dirPath, 'RepositoryServiceProvider.php');
+      
+      if (!fs.existsSync(filePath)) {
+        const content = await this.templateEngine.getStubContent('initializers/backend/repository-service-provider');
+        fs.writeFileSync(filePath, content);
+        
+        // Register the service provider in config/app.php
+        this.registerServiceProvider(projectRoot);
+      }
+    } catch (error) {
+      console.error('Error creating RepositoryServiceProvider:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Register service provider in config/app.php
+   */
+  private registerServiceProvider(projectRoot: string): void {
+    try {
+      const configAppPath = path.join(projectRoot, 'config/app.php');
+      if (!fs.existsSync(configAppPath)) {
+        return;
+      }
+
+      let content = fs.readFileSync(configAppPath, 'utf-8');
+
+      // Check if provider is already registered
+      if (content.includes('App\\Providers\\RepositoryServiceProvider::class')) {
+        return;
+      }
+
+      // Find the providers array
+      const providersMatch = content.match(/'providers'\s*=>\s*\[([\s\S]*?)\]/);
+      if (!providersMatch || !providersMatch[1]) {
+        return;
+      }
+
+      // Replace the end of providers array with our provider
+      const lastProviderMatch = providersMatch[1].match(/.*?,(\s*)$/);
+      if (lastProviderMatch) {
+        const indent = lastProviderMatch[1];
+        const replacement = `        App\\Providers\\RepositoryServiceProvider::class,${indent}`;
+        content = content.replace(/.*?,(\s*)$/m, `$&${replacement}`);
+        fs.writeFileSync(configAppPath, content);
+      }
+    } catch (error) {
+      console.error('Error registering service provider:', error);
+    }
+  }
+
+  /**
+   * Create backend traits files
+   */
+  public async createBackendTraits(projectRoot: string): Promise<void> {
+    const traits = [
+      { dir: 'app/Traits/Repositories', name: 'HandlesFiltering', stub: 'initializers/backend/traits/repositories/handles-filtering' },
+      { dir: 'app/Traits/Repositories', name: 'HandlesRelations', stub: 'initializers/backend/traits/repositories/handles-relations' },
+      { dir: 'app/Traits/Repositories', name: 'HandlesSorting', stub: 'initializers/backend/traits/repositories/handles-sorting' },
+      { dir: 'app/Traits/Repositories', name: 'RelationQueryable', stub: 'initializers/backend/traits/repositories/relation-queryable' },
+      { dir: 'app/Traits/Services', name: 'HandlesFileUpload', stub: 'initializers/backend/traits/services/handles-file-upload' },
+      { dir: 'app/Traits/Services', name: 'HandlesPageSizeAll', stub: 'initializers/backend/traits/services/handles-page-size-all' },
+      { dir: 'app/Traits/Resources/JsonResource', name: 'HandlesResourceDataSelection', stub: 'initializers/backend/traits/resources/json_resource/handles-resource-data-selection' }
+    ];
+
+    for (const trait of traits) {
+      const filePath = path.join(projectRoot, `${trait.dir}/${trait.name}.php`);
+      const dirPath = path.dirname(filePath);
+      
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      if (!fs.existsSync(filePath)) {
+        try {
+          const content = await this.templateEngine.getStubContent(trait.stub);
+          fs.writeFileSync(filePath, content);
+        } catch (error) {
+          console.error(`Error creating ${trait.name}:`, error);
         }
       }
     }
+  }
+  
+  /**
+   * Create intent enum file
+   */
+  public async createIntentEnum(projectRoot: string): Promise<void> {
+    const filePath = path.join(projectRoot, 'app/Support/Enums/IntentEnum.php');
+    const dirPath = path.dirname(filePath);
+    
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    
+    if (!fs.existsSync(filePath)) {
+      try {
+        const content = await this.templateEngine.getStubContent('initializers/backend/support/enums/intent-enum');
+        fs.writeFileSync(filePath, content);
+      } catch (error) {
+        console.error('Error creating IntentEnum:', error);
+      }
+    }
+  }
+  
+  /**
+   * Create permission enum file
+   */
+  public async createPermissionEnum(projectRoot: string): Promise<void> {
+    const filePath = path.join(projectRoot, 'app/Support/Enums/PermissionEnum.php');
+    const dirPath = path.dirname(filePath);
+    
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    
+    if (!fs.existsSync(filePath)) {
+      try {
+        const content = await this.templateEngine.getStubContent('initializers/backend/support/enums/permission-enum');
+        fs.writeFileSync(filePath, content);
+      } catch (error) {
+        console.error('Error creating PermissionEnum:', error);
+      }
+    }
+  }
+
+  /**
+   * Create model interfaces
+   */
+  private async createModelInterfaces(projectRoot: string): Promise<void> {
+    // Create base model interface
+    const baseModelPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Models/Model.ts');
+    if (!fs.existsSync(baseModelPath)) {
+      const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/models/model');
+      fs.writeFileSync(baseModelPath, content);
+    }
+
+    // Create index file
+    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Models/index.ts');
+    if (!fs.existsSync(indexPath)) {
+      const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/models/index');
+      fs.writeFileSync(indexPath, content);
+    }
+  }
+
+  /**
+   * Create resource interfaces
+   */
+  private async createResourceInterfaces(projectRoot: string): Promise<void> {
+    // Create base resource interface
+    const baseResourcePath = path.join(projectRoot, 'resources/js/Support/Interfaces/Resources/Resource.ts');
+    if (!fs.existsSync(baseResourcePath)) {
+      const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/resources/resource');
+      fs.writeFileSync(baseResourcePath, content);
+    }
+
+    // Create index file
+    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Resources/index.ts');
+    if (!fs.existsSync(indexPath)) {
+      const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/resources/index');
+      fs.writeFileSync(indexPath, content);
+    }
+  }
+
+  /**
+   * Create other interfaces
+   */
+  private async createOtherInterfaces(projectRoot: string): Promise<void> {
+    const interfaces = [
+      { name: 'PaginateMeta', stub: 'initializers/frontend/support/interfaces/others/paginate-meta' },
+      { name: 'PaginateMetaLink', stub: 'initializers/frontend/support/interfaces/others/paginate-meta-link' },
+      { name: 'PaginateResponse', stub: 'initializers/frontend/support/interfaces/others/paginate-response' },
+      { name: 'ServiceFilterOptions', stub: 'initializers/frontend/support/interfaces/others/service-filter-options' },
+      { name: 'ServiceHooksFactory', stub: 'initializers/frontend/support/interfaces/others/service-hooks-factory' },
+      { name: 'GenericBreadcrumbItem', stub: 'initializers/frontend/support/interfaces/others/generic-breadcrumb-item' },
+      { name: 'DashboardMenuItem', stub: 'initializers/frontend/support/interfaces/others/dashboard-menu-item' },
+    ];
+
+    for (const item of interfaces) {
+      const filePath = path.join(projectRoot, `resources/js/Support/Interfaces/Others/${item.name}.ts`);
+      const dirPath = path.dirname(filePath);
+      
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      if (!fs.existsSync(filePath)) {
+        try {
+          const content = await this.templateEngine.getStubContent(item.stub);
+          fs.writeFileSync(filePath, content);
+        } catch (error) {
+          console.error(`Error creating ${item.name}:`, error);
+        }
+      }
+    }
+
+    // Create index file
+    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Others/index.ts');
+    if (!fs.existsSync(indexPath)) {
+      const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/others/index');
+      fs.writeFileSync(indexPath, content);
+    }
+  }
+
+  /**
+   * Create constants
+   */
+  private async createConstants(projectRoot: string): Promise<void> {
+    const constants = [
+      { name: 'routes', stub: 'initializers/frontend/support/constants/routes' },
+      { name: 'tanstackQueryKeys', stub: 'initializers/frontend/support/constants/tanstack-query-keys' },
+      { name: 'styling', stub: 'initializers/frontend/support/constants/styling' },
+      { name: 'permissionValidActions', stub: 'initializers/frontend/support/constants/permission-valid-actions' },
+      { name: 'paginationNavigator', stub: 'initializers/frontend/support/constants/pagination-navigator' },
+    ];
+
+    for (const constant of constants) {
+      const filePath = path.join(projectRoot, `resources/js/Support/Constants/${constant.name}.ts`);
+      const dirPath = path.dirname(filePath);
+      
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      
+      if (!fs.existsSync(filePath)) {
+        try {
+          const content = await this.templateEngine.getStubContent(constant.stub);
+          fs.writeFileSync(filePath, content);
+        } catch (error) {
+          console.error(`Error creating ${constant.name}:`, error);
+        }
+      }
+    }
+  }
+  
+  /**
+   * Create service hooks factory
+   */
+  private async createServiceHooksFactory(projectRoot: string): Promise<void> {
+    const filePath = path.join(projectRoot, 'resources/js/Services/serviceHooksFactory.ts');
+    const dirPath = path.dirname(filePath);
+    
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    
+    if (!fs.existsSync(filePath)) {
+      try {
+        const content = await this.templateEngine.getStubContent('initializers/frontend/services/service-hooks-factory');
+        fs.writeFileSync(filePath, content);
+      } catch (error) {
+        console.error('Error creating serviceHooksFactory:', error);
+      }
+    }
+  }
+
+  /**
+   * Create helpers
+   */
+  private async createHelpers(projectRoot: string): Promise<void> {
+    const filePath = path.join(projectRoot, 'resources/js/Helpers/index.ts');
+    const dirPath = path.dirname(filePath);
+    
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+    
+    if (!fs.existsSync(filePath)) {
+      try {
+        const content = await this.templateEngine.getStubContent('initializers/frontend/helpers/index');
+        fs.writeFileSync(filePath, content);
+      } catch (error) {
+        console.error('Error creating Helpers:', error);
+      }
+    }
+  }
+
+  /**
+   * Synchronize stubs from extension to project for customization
+   */
+  public async synchronizeStubs(targetPath: string): Promise<string[]> {
+    try {
+      // Create stubs directory in the target project
+      const projectStubsDir = path.join(targetPath, 'stubs/scaffold');
+      if (!fs.existsSync(projectStubsDir)) {
+        fs.mkdirSync(projectStubsDir, { recursive: true });
+      }
+
+      // Get the extension's stub directory
+      const extensionStubsDir = this.context.asAbsolutePath('resources/stubs');
+      
+      // Copy all stubs from backend and frontend directories but skip initializers
+      const copiedFiles: string[] = [];
+      
+      // Copy backend stubs (excluding initializers)
+      await this.copyStubsFromDirectory(
+        path.join(extensionStubsDir, 'backend'), 
+        path.join(projectStubsDir, 'backend'),
+        copiedFiles
+      );
+      
+      // Copy frontend stubs (excluding initializers)
+      await this.copyStubsFromDirectory(
+        path.join(extensionStubsDir, 'frontend'), 
+        path.join(projectStubsDir, 'frontend'),
+        copiedFiles
+      );
+      
+      return copiedFiles;
+    } catch (error) {
+      console.error('Error synchronizing stubs:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Copy stubs from source to destination directory, excluding initializers
+   */
+  private async copyStubsFromDirectory(sourceDir: string, destDir: string, copiedFiles: string[] = []): Promise<void> {
+    if (!fs.existsSync(sourceDir)) {
+      return;
+    }
+    
+    // Create destination directory if it doesn't exist
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    
+    // Read all files in the source directory
+    const files = fs.readdirSync(sourceDir, { withFileTypes: true });
+    
+    for (const file of files) {
+      const sourcePath = path.join(sourceDir, file.name);
+      const destPath = path.join(destDir, file.name);
+      
+      // Skip initializers directory
+      if (file.isDirectory() && file.name === 'initializers') {
+        continue;
+      }
+      
+      if (file.isDirectory()) {
+        // Recursively copy subdirectories
+        await this.copyStubsFromDirectory(sourcePath, destPath, copiedFiles);
+      } else {
+        // Copy stub file
+        fs.copyFileSync(sourcePath, destPath);
+        copiedFiles.push(destPath);
+      }
+    }
+  }
+
+  /**
+   * Create frontend interfaces
+   */
+  private async createFrontendInterfaces(projectRoot: string): Promise<void> {
+    // Create directories
+    const interfacesDir = path.join(projectRoot, 'resources/js/Support/Interfaces');
+    if (!fs.existsSync(interfacesDir)) {
+      fs.mkdirSync(interfacesDir, { recursive: true });
+    }
+    
+    const modelsDir = path.join(interfacesDir, 'Models');
+    if (!fs.existsSync(modelsDir)) {
+      fs.mkdirSync(modelsDir);
+    }
+    
+    const resourcesDir = path.join(interfacesDir, 'Resources');
+    if (!fs.existsSync(resourcesDir)) {
+      fs.mkdirSync(resourcesDir);
+    }
+    
+    const othersDir = path.join(interfacesDir, 'Others');
+    if (!fs.existsSync(othersDir)) {
+      fs.mkdirSync(othersDir);
+    }
+    
+    // Create base model interface
+    const modelInterfacePath = path.join(modelsDir, 'Model.ts');
+    const modelInterfaceContent = `export interface Model {
+    id: number;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
+}`;
+    fs.writeFileSync(modelInterfacePath, modelInterfaceContent);
+    
+    const modelIndexPath = path.join(modelsDir, 'index.ts');
+    fs.writeFileSync(modelIndexPath, "export * from './Model';\n");
+    
+    // Create base resource interface
+    const resourceInterfacePath = path.join(resourcesDir, 'Resource.ts');
+    const resourceInterfaceContent = `import { Model } from '../Models/Model';
+
+export interface Resource extends Model {
+    // Base resource properties
+}`;
+    fs.writeFileSync(resourceInterfacePath, resourceInterfaceContent);
+    
+    const resourceIndexPath = path.join(resourcesDir, 'index.ts');
+    fs.writeFileSync(resourceIndexPath, "export * from './Resource';\n");
+    
+    // Create other interfaces 
+    const genericBreadcrumbPath = path.join(othersDir, 'GenericBreadcrumbItem.ts');
+    const genericBreadcrumbContent = `export interface GenericBreadcrumbItem {
+    name: string;
+    link: string;
+    icon?: string;
+    active?: boolean;
+}`;
+    fs.writeFileSync(genericBreadcrumbPath, genericBreadcrumbContent);
+    
+    const dashboardMenuItemPath = path.join(othersDir, 'DashboardMenuItem.ts');
+    const dashboardMenuItemContent = `import { LucideIcon } from 'lucide-react';
+
+export interface BaseMenuItem {
+    title: string;
+    icon?: LucideIcon;
+    permissions?: string[];
+}
+
+export interface SingleMenuItem extends BaseMenuItem {
+    url: string;
+    type: 'menu';
+}
+
+export interface DropdownMenuItem extends BaseMenuItem {
+    type: 'dropdown';
+    items: {
+        title: string;
+        url: string;
+        permissions?: string[];
+    }[];
+}
+
+export interface MenuGroup {
+    type: 'group';
+    title: string;
+    items: (SingleMenuItem | DropdownMenuItem)[];
+}
+
+export type MenuItem = SingleMenuItem | DropdownMenuItem | MenuGroup;`;
+    fs.writeFileSync(dashboardMenuItemPath, dashboardMenuItemContent);
+    
+    // Create the other interface files as needed
+    const paginateMetaPath = path.join(othersDir, 'PaginateMeta.ts');
+    const paginateMetaContent = `import { PaginateMetaLink } from './PaginateMetaLink';
+
+export interface PaginateMeta {
+    current_page: number;
+    from: number;
+    last_page: number;
+    links: PaginateMetaLink[];
+    path: string;
+    per_page: number;
+    to: number;
+    total: number;
+}`;
+    fs.writeFileSync(paginateMetaPath, paginateMetaContent);
+    
+    // Create other interfaces index
+    const othersIndexPath = path.join(othersDir, 'index.ts');
+    const othersIndexContent = `export * from './DashboardMenuItem';
+export * from './GenericBreadcrumbItem';
+export * from './PaginateMeta';
+export * from './PaginateMetaLink';
+export * from './PaginateResponse';
+export * from './ServiceFilterOptions';
+export * from './ServiceHooksFactory';`;
+    fs.writeFileSync(othersIndexPath, othersIndexContent);
   }
 }

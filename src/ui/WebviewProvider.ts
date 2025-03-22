@@ -1361,25 +1361,175 @@ export function serviceHooksFactory<T extends Resource>({ baseKey, baseRoute }: 
       fs.mkdirSync(helpersDir, { recursive: true });
     }
     
-    // Create the query key generators
-    const queryKeysPath = path.join(helpersDir, 'index.ts');
-    const queryKeysContent = `/**
- * Generate a query key for fetching all items
- */
-export function generateUseGetAllQueryKey(baseKey: string, filters?: Record<string, any>) {
-    if (!filters) return [baseKey, 'all'];
-    return [baseKey, 'all', filters];
-}
-
-/**
- * Generate a query key for fetching a single item
- */
-export function generateUseGetQueryKey(baseKey: string, id: number | string) {
-    return [baseKey, 'detail', id];
-}
+    // Create index.ts
+    const indexPath = path.join(helpersDir, 'index.ts');
+    const indexContent = `export * from './generateDynamicBreadcrumbs';
+export * from './generateServiceHooksFactoryQueryKey';
+export * from './tanstackQueryHelpers';
 `;
+    fs.writeFileSync(indexPath, indexContent);
+    
+    // Create generateServiceHooksFactoryQueryKey.ts
+    const queryKeyPath = path.join(helpersDir, 'generateServiceHooksFactoryQueryKey.ts');
+    const queryKeyContent = `import { ServiceFilterOptions } from '@/Support/Interfaces/Others';
 
-    fs.writeFileSync(queryKeysPath, queryKeysContent);
+const generateUseGetAllQueryKey = (baseKey: string, filters?: ServiceFilterOptions) => {
+    return [baseKey, 'all', filters];
+};
+
+const generateUseGetQueryKey = (baseKey: string, id: number) => {
+    return [baseKey, 'detail', id];
+};
+
+export { generateUseGetAllQueryKey, generateUseGetQueryKey };
+`;
+    fs.writeFileSync(queryKeyPath, queryKeyContent);
+    
+    // Create generateDynamicBreadcrumbs.ts
+    const breadcrumbsPath = path.join(helpersDir, 'generateDynamicBreadcrumbs.ts');
+    const breadcrumbsContent = `import { ROUTES } from '@/Support/Constants/routes';
+import { GenericBreadcrumbItem } from '@/Support/Interfaces/Others';
+import { usePage } from '@inertiajs/react';
+
+function generateDynamicBreadcrumbs(): GenericBreadcrumbItem[] {
+    const { url } = usePage();
+
+    // Parse the URL to handle query parameters
+    const urlObj = new URL(window.location.origin + url);
+    const pathWithoutQuery = urlObj.pathname;
+
+    // Extract only the path part from the dashboard route
+    const dashboardPath = new URL(route(\`\${ROUTES.DASHBOARD}.index\`)).pathname;
+
+    // Handle dashboard route
+    if (pathWithoutQuery === dashboardPath) {
+        return [
+            {
+                name: 'Home',
+                link: route(\`\${ROUTES.DASHBOARD}.index\`),
+                active: true,
+            },
+        ];
+    }
+
+    const paths = pathWithoutQuery.split('/').filter(Boolean);
+
+    const breadcrumbs: GenericBreadcrumbItem[] = paths.map((path, index) => {
+        const isActive = index === paths.length - 1;
+
+        // Format the name by replacing hyphens with spaces and capitalizing each word
+        const name = path
+            .split('-')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+
+        // Construct the link maintaining the same path structure
+        const link = \`/\${paths.slice(0, index + 1).join('/')}\`;
+
+        // Add query parameters only to the active (last) breadcrumb if they exist
+        const finalLink = isActive ? \`\${link}\${urlObj.search}\` : link;
+
+        return {
+            name,
+            link: finalLink,
+            active: isActive,
+        };
+    });
+
+    // Add "Home" as the root breadcrumb
+    breadcrumbs.unshift({
+        name: 'Home',
+        link: route(\`\${ROUTES.DASHBOARD}.index\`),
+        active: false,
+    });
+
+    return breadcrumbs;
+}
+
+export { generateDynamicBreadcrumbs };
+`;
+    fs.writeFileSync(breadcrumbsPath, breadcrumbsContent);
+    
+    // Create tanstackQueryHelpers.ts
+    const tanstackPath = path.join(helpersDir, 'tanstackQueryHelpers.ts');
+    const tanstackContent = `import { ServiceFilterOptions } from '@/Support/Interfaces/Others';
+import {
+    InvalidateQueryFilters,
+    QueryFunction,
+    useMutation,
+    useQuery,
+    useQueryClient,
+    UseQueryOptions,
+} from '@tanstack/react-query';
+import { AxiosRequestConfig, Method } from 'axios';
+
+const mutationApi = async ({
+    method,
+    url,
+    data = {},
+    params = {},
+    requestConfig = {},
+}: {
+    method: Method;
+    url: string;
+    data?: Record<string, any>;
+    params?: ServiceFilterOptions;
+    requestConfig?: AxiosRequestConfig;
+}) => {
+    return await window.axios({
+        method,
+        url,
+        data,
+        params,
+        ...requestConfig,
+    });
+};
+
+const createMutation = ({
+    mutationFn,
+    onSuccess,
+    invalidateQueryKeys,
+}: {
+    mutationFn: (...args: any[]) => Promise<any>;
+    onSuccess?: () => Promise<void>;
+    invalidateQueryKeys?: InvalidateQueryFilters[];
+}) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn,
+        onSuccess: async () => {
+            if (invalidateQueryKeys) {
+                for (const key of invalidateQueryKeys) {
+                    await queryClient.invalidateQueries(key);
+                }
+                if (onSuccess) {
+                    await onSuccess();
+                }
+            }
+        },
+    });
+};
+
+const createQuery = <TQueryFnData, TError, TData>({
+    queryKey,
+    queryFn,
+    queryOptions,
+}: {
+    queryKey: any[];
+    queryFn: QueryFunction<TQueryFnData>;
+    queryOptions?: Omit<UseQueryOptions<TQueryFnData, TError, TData>, 'queryKey' | 'queryFn'>;
+}) => {
+    return useQuery<TQueryFnData, TError, TData>({
+        queryKey,
+        queryFn,
+        ...queryOptions,
+    });
+};
+
+export { createMutation, createQuery, mutationApi };
+`;
+    fs.writeFileSync(tanstackPath, tanstackContent);
   }
 
   /**
@@ -1394,26 +1544,25 @@ export function generateUseGetQueryKey(baseKey: string, id: number | string) {
     
     const modelsDir = path.join(interfacesDir, 'Models');
     if (!fs.existsSync(modelsDir)) {
-      fs.mkdirSync(modelsDir);
+      fs.mkdirSync(modelsDir, { recursive: true });
     }
     
     const resourcesDir = path.join(interfacesDir, 'Resources');
     if (!fs.existsSync(resourcesDir)) {
-      fs.mkdirSync(resourcesDir);
+      fs.mkdirSync(resourcesDir, { recursive: true });
     }
     
     const othersDir = path.join(interfacesDir, 'Others');
     if (!fs.existsSync(othersDir)) {
-      fs.mkdirSync(othersDir);
+      fs.mkdirSync(othersDir, { recursive: true });
     }
     
     // Create base model interface
     const modelInterfacePath = path.join(modelsDir, 'Model.ts');
     const modelInterfaceContent = `export interface Model {
     id: number;
-    created_at?: string;
-    updated_at?: string;
-    deleted_at?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }`;
     fs.writeFileSync(modelInterfacePath, modelInterfaceContent);
     
@@ -1432,77 +1581,142 @@ export interface Resource extends Model {
     const resourceIndexPath = path.join(resourcesDir, 'index.ts');
     fs.writeFileSync(resourceIndexPath, "export * from './Resource';\n");
     
-    // Create other interfaces
-    const othersInterfacePath = path.join(othersDir, 'index.ts');
-    const othersInterfaceContent = `// Pagination interfaces
-export interface PaginateMetaLink {
-    url: string | null;
-    label: string;
+    // Create other interfaces 
+    const genericBreadcrumbPath = path.join(othersDir, 'GenericBreadcrumbItem.ts');
+    const genericBreadcrumbContent = `export interface GenericBreadcrumbItem {
+    name: string;
+    link: string;
+    icon?: string;
+    active?: boolean;
+}`;
+    fs.writeFileSync(genericBreadcrumbPath, genericBreadcrumbContent);
+    
+    // Create ServiceFilterOptions interface
+    const serviceFilterOptionsPath = path.join(othersDir, 'ServiceFilterOptions.ts');
+    const serviceFilterOptionsContent = `import { Model } from '../Models/Model';
+
+export interface ServiceFilterOptions<T extends Model | undefined = undefined> {
+    page?: number;
+    page_size?: number | 'all';
+    sortBy?: T extends Model
+        ? Array<[keyof T | string, 'asc' | 'desc']>
+        : Array<[string, 'asc' | 'desc']>; 
+    search?: string;
+    relations?: string; 
+    relations_count?: string;
+    column_filters?: T extends Model
+        ? {
+              [K in keyof T]?: any;
+          } & Record<string, any>
+        : Record<string, any>;
+
+    [key: string]: any; // Allow for additional filter options
+}`;
+    fs.writeFileSync(serviceFilterOptionsPath, serviceFilterOptionsContent);
+    
+    // Create pagination interfaces
+    const paginateMetaLinkPath = path.join(othersDir, 'PaginateMetaLink.ts');
+    const paginateMetaLinkContent = `export interface PaginateMetaLink {
     active: boolean;
-}
+    label: string;
+    url: string;
+}`;
+    fs.writeFileSync(paginateMetaLinkPath, paginateMetaLinkContent);
+    
+    const paginateMetaPath = path.join(othersDir, 'PaginateMeta.ts');
+    const paginateMetaContent = `import { PaginateMetaLink } from './PaginateMetaLink';
 
 export interface PaginateMeta {
-    current_page: number;
-    from: number;
-    last_page: number;
-    links: PaginateMetaLink[];
-    path: string;
-    per_page: number;
-    to: number;
-    total: number;
-}
-
-export interface PaginateResponse<T> {
-    data: T[];
-    meta: PaginateMeta;
-}
-
-// Service hooks interfaces
-export interface ServiceHooks {
-    baseKey: string;
-    baseRoute: string;
-}
-
-// Query options
-export interface UseGetAllOptions<T> {
-    filters?: Record<string, any>;
-    axiosRequestConfig?: any;
-    useQueryOptions?: any;
-}
-
-export interface UseGetOptions<T> {
-    id: number | string;
-    axiosRequestConfig?: any;
-    useQueryOptions?: any;
-}
-
-export interface UseCreateOptions<T> {
-    axiosRequestConfig?: any;
-    useMutationOptions?: any;
-}
-
-export interface UseUpdateOptions<T> {
-    axiosRequestConfig?: any;
-    useMutationOptions?: any;
-}
-
-export interface UseDeleteOptions<T> {
-    axiosRequestConfig?: any;
-    useMutationOptions?: any;
+    current_page?: number;
+    from?: number;
+    last_page?: number;
+    links?: PaginateMetaLink[];
+    path?: string;
+    per_page?: number;
+    to?: number;
+    total?: number;
 }`;
-    fs.writeFileSync(othersInterfacePath, othersInterfaceContent);
+    fs.writeFileSync(paginateMetaPath, paginateMetaContent);
     
-    // Create constants directory and files
+    const paginateResponsePath = path.join(othersDir, 'PaginateResponse.ts');
+    const paginateResponseContent = `import { PaginateMeta } from './PaginateMeta';
+
+export interface PaginateResponse<Resource> {
+    data?: Resource[];
+    meta?: PaginateMeta;
+}`;
+    fs.writeFileSync(paginateResponsePath, paginateResponseContent);
+    
+    // Create ServiceHooksFactory interface
+    const serviceHooksFactoryPath = path.join(othersDir, 'ServiceHooksFactory.ts');
+    const serviceHooksFactoryContent = `import { PaginateResponse } from './PaginateResponse';
+import { ServiceFilterOptions } from './ServiceFilterOptions';
+import { Resource } from '../Resources/Resource';
+import type {
+    UseMutationOptions as ReactQueryUseMutationOptions,
+    UseQueryOptions,
+} from '@tanstack/react-query';
+import { AxiosRequestConfig } from 'axios';
+
+export interface ServiceHooks {
+    baseRoute: string;
+    baseKey?: string;
+}
+
+export interface DefaultOptions<T = unknown> {
+    axiosRequestConfig?: AxiosRequestConfig;
+    useQueryOptions?: UseQueryOptions<T>;
+}
+
+export interface DefaultMutationOptions<
+    TData = unknown,
+    TError = unknown,
+    TVariables = void,
+    TContext = unknown,
+> extends Omit<DefaultOptions, 'useQueryOptions'> {
+    useMutationOptions?: ReactQueryUseMutationOptions<TData, TError, TVariables, TContext>;
+}
+
+export interface UseGetAllOptions<T> extends DefaultOptions<PaginateResponse<T>> {
+    filters?: ServiceFilterOptions;
+}
+
+export interface UseGetOptions<T> extends DefaultOptions<T> {
+    id: number;
+}
+
+export interface UseCreateOptions<T extends Resource>
+    extends DefaultMutationOptions<Partial<T>, Error, { data: Partial<T> }> {}
+
+export interface UseUpdateOptions<T extends Resource>
+    extends DefaultMutationOptions<Partial<T>, Error, { id: number; data: Partial<T> }> {}
+
+export interface UseDeleteOptions<T extends Resource>
+    extends DefaultMutationOptions<Partial<T>, Error, { id: number }> {}`;
+    fs.writeFileSync(serviceHooksFactoryPath, serviceHooksFactoryContent);
+    
+    // Create other interfaces index
+    const othersIndexPath = path.join(othersDir, 'index.ts');
+    const othersIndexContent = `export * from './GenericBreadcrumbItem';
+export * from './PaginateMeta';
+export * from './PaginateMetaLink';
+export * from './PaginateResponse';
+export * from './ServiceFilterOptions';
+export * from './ServiceHooksFactory';`;
+    fs.writeFileSync(othersIndexPath, othersIndexContent);
+    
+    // Create constants directory and routes
     const constantsDir = path.join(projectRoot, 'resources/js/Support/Constants');
     if (!fs.existsSync(constantsDir)) {
       fs.mkdirSync(constantsDir, { recursive: true });
     }
     
-    // Create routes.ts
     const routesPath = path.join(constantsDir, 'routes.ts');
-    const routesContent = `export const routes = {
-    // Define your routes constants here
-    // Example: USERS: 'users'
+    const routesContent = `export const ROUTES = {
+    // Application routes
+    DASHBOARD: 'dashboard',
+    USERS: 'users',
+    // Add your routes here
 };`;
     
     if (!fs.existsSync(routesPath)) {

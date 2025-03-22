@@ -1,9 +1,53 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { WebviewProvider } from '../ui/WebviewProvider';
 import { TemplateEngine } from '../engine/TemplateEngine';
 import { SchemaParser } from '../parsers/SchemaParser';
 import { ProjectInitializer } from '../initializer/ProjectInitializer';
 import { ModelDefinition } from '../types/ModelDefinition';
+
+/**
+ * Register the synchronizeStubs command
+ */
+export function registerSynchronizeStubsCommand(
+  context: vscode.ExtensionContext,
+  templateEngine: TemplateEngine
+) {
+  context.subscriptions.push(
+    vscode.commands.registerCommand('laravelForgemate.synchronizeStubs', async () => {
+      try {
+        // Get Laravel project path from configuration
+        const config = vscode.workspace.getConfiguration('laravelForgemate');
+        const laravelProjectPath = config.get<string>('laravelProjectPath', '');
+        
+        // If no custom path is provided, use workspace folder
+        let targetPath = laravelProjectPath;
+        if (!targetPath) {
+          const workspaceFolders = vscode.workspace.workspaceFolders;
+          if (!workspaceFolders || workspaceFolders.length === 0) {
+            throw new Error('No workspace folder found. Please open a folder or set laravelProjectPath in settings.');
+          }
+          targetPath = workspaceFolders[0].uri.fsPath;
+        }
+        
+        const projectInitializer = new ProjectInitializer(context, templateEngine);
+        const copiedFiles = await projectInitializer.synchronizeStubs(targetPath); // Fix: Added targetPath parameter
+        
+        vscode.window.showInformationMessage(
+          `Successfully synchronized ${copiedFiles.length} stub files.`,
+          'Open Stubs Directory'
+        ).then(selection => {
+          if (selection === 'Open Stubs Directory') {
+            const stubsPath = path.join(targetPath, 'stubs/scaffold');
+            vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(stubsPath));
+          }
+        });
+      } catch (error) {
+        vscode.window.showErrorMessage(`Error synchronizing stubs: ${(error as Error).message}`);
+      }
+    })
+  );
+}
 
 export function registerCommands(
   context: vscode.ExtensionContext,
@@ -140,26 +184,7 @@ export function registerCommands(
   );
   
   // Synchronize stubs
-  context.subscriptions.push(
-    vscode.commands.registerCommand('laravelForgemate.synchronizeStubs', async () => {
-      try {
-        await vscode.window.withProgress({
-          location: vscode.ProgressLocation.Notification,
-          title: 'Synchronizing stubs...',
-          cancellable: false
-        }, async (progress) => {
-          const projectInitializer = new ProjectInitializer(context, templateEngine);
-          progress.report({ increment: 50, message: 'Copying stub files...' });
-          await projectInitializer.synchronizeStubs();
-          progress.report({ increment: 50, message: 'Stubs synchronized!' });
-        });
-        
-        vscode.window.showInformationMessage('Stubs synchronized successfully!');
-      } catch (error) {
-        vscode.window.showErrorMessage(`Stub synchronization failed: ${(error as Error).message}`);
-      }
-    })
-  );
+  registerSynchronizeStubsCommand(context, templateEngine);
 
   // Refresh explorer view
   context.subscriptions.push(
