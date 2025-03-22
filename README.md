@@ -141,4 +141,38 @@ Using this sample model for examples:
 
 ## Customizing Stubs
 
-Run `Laravel Forgemate: Synchronize Stubs` to copy default stubs to your project, then customize them at:
+One of Laravel Forgemate's most powerful features is the ability to customize the templates (stubs) used for code generation. This allows you to tailor the generated code to match your project's coding style and requirements.
+
+### Using the Synchronize Stubs Command
+
+The easiest way to customize stubs is to use the built-in "Synchronize Stubs" command:
+
+1. Open the command palette with `Ctrl+Shift+P`
+2. Type "Laravel Forgemate: Synchronize Stubs" and press Enter
+3. This will copy all the default stubs to your Laravel project's stubs directory
+4. You can then customize any of these stubs to match your project's needs
+
+Alternatively, you can use the "Laravel Forgemate: Synchronize Stubs" command from the UI panel.
+![Laravel Forgemate Synchronize Stubs Demo](resources/images/laravel-forgemate-customizing-stubs-demo.gif)
+
+### Benefits of Customizing Stubs
+
+- **Consistent coding style**: Ensure all generated code follows your team's conventions
+- **Project-specific requirements**: Add custom methods or properties that your project needs
+- **Enhanced TypeScript support**: Improve type safety in your frontend code
+- **Time-saving**: Define the structure once, reuse it across your entire project
+
+### Available Stub Types
+
+- Backend stubs (PHP): models, controllers, repositories, services, etc.
+- Frontend stubs (TypeScript): interfaces, service hooks, etc.
+
+Customizing stubs gives you complete control over the generated code while still benefiting from the automation that Laravel Forgemate provides!
+
+## Support
+
+If you encounter any issues or have feature requests, please file an issue on our [GitHub repository](https://github.com/evanightly/laravel-forgemate).
+
+## License
+
+This extension is licensed under the MIT License.
