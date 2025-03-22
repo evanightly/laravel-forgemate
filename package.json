@@ -1,24 +1,35 @@
 {
   "name": "laravel-forgemate",
   "displayName": "Laravel Forgemate",
-  "description": "Advanced Laravel scaffold generator with service-repository pattern support",
+  "description": "Laravel scaffolding with service-repository pattern support",
   "version": "1.0.0",
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
     "Snippets",
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:laravelForgemate.showWebview",
-    "onCommand:laravelForgemate.generateScaffold",
-    "onCommand:laravelForgemate.initializeProject",
-    "onCommand:laravelForgemate.synchronizeStubs",
-    "onView:laravelForgemateExplorer"
-  ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "laravel-forgemate",
+          "title": "Laravel Forgemate",
+          "icon": "resources/icons/laravel-forgemate.svg"
+        }
+      ]
+    },
+    "views": {
+      "laravel-forgemate": [
+        {
+          "id": "laravelForgemateExplorer",
+          "name": "Laravel Forgemate",
+          "icon": "resources/icons/laravel-forgemate.svg"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "laravelForgemate.showWebview",
@@ -41,14 +52,6 @@
         "title": "Laravel Forgemate: Refresh Explorer"
       }
     ],
-    "views": {
-      "explorer": [
-        {
-          "id": "laravelForgemateExplorer",
-          "name": "Laravel Forgemate"
-        }
-      ]
-    },
     "configuration": {
       "title": "Laravel Forgemate",
       "properties": {
