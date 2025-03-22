@@ -13,19 +13,34 @@ A powerful VS Code extension for automatically generating Laravel scaffolding wi
 - Intelligent relationship handling
 - UI for visually creating your models
 
+## Default Package Integrations
+
+Laravel Forgemate is designed to work seamlessly with specific packages by default, but you can customize the generated code to work with any stack.
+
+### Backend Defaults
+
+- **[Laravel Repository Service Pattern](https://github.com/adobrovolsky97/laravel-repository-service-pattern)**: Used to handle service and repository processes, effectively decoupling the application's business logic from the specific implementation details of data storage. All generated backend code follows this pattern.
+
+### Frontend Defaults
+
+- **[@tanstack/react-query](https://tanstack.com/query/latest)**: The generated service hooks are built with TanStack Query (formerly React Query) to handle data transaction processes efficiently. You can see this in the implementation of the serviceHooksFactory.ts files.
+- **NyxbUI**: The scaffolding is designed to work with this ReactJS component library, which is similar to ShadCN but with enhanced animations and unique components. Frontend templates assume the use of these UI components.
+
+> **Note**: If your project uses different packages, you can customize the stubs to match your tech stack. See the "Customizing Stubs" section below for details.
+
 ## Laravel Compatibility
 
 ### Laravel 11+ Support
 
 Laravel Forgemate fully supports Laravel 11+ with the following enhancements:
 
-| Feature | Description |
-|---------|-------------|
+| Feature                 | Description                                                          |
+| ----------------------- | -------------------------------------------------------------------- |
 | New Directory Structure | Automatically adapts to Laravel 11's streamlined directory structure |
-| PHP 8.2+ Compatibility | All generated code uses PHP 8.2+ syntax and features |
-| Invokable Controllers | Option to generate single-action invokable controllers |
-| Pest Testing | Support for generating Pest test files instead of PHPUnit |
-| Route Attributes | Support for PHP attributes-based routing in controllers |
+| PHP 8.2+ Compatibility  | All generated code uses PHP 8.2+ syntax and features                 |
+| Invokable Controllers   | Option to generate single-action invokable controllers               |
+| Pest Testing            | Support for generating Pest test files instead of PHPUnit            |
+| Route Attributes        | Support for PHP attributes-based routing in controllers              |
 
 ### Minimum Requirements
 
@@ -49,6 +64,7 @@ Run `Laravel Forgemate: Initialize Project` to set up base files for service-rep
 ### 2. Generate Your First Scaffold
 
 Either:
+
 - Use `Laravel Forgemate: Open UI Panel` to use the visual interface
 - Or run `Laravel Forgemate: Generate Scaffold` to use the command palette
 
@@ -56,18 +72,19 @@ Either:
 
 For example, for an ArticleNews model:
 
-| Attribute | Type | Description |
-|-----------|------|-------------|
-| title | string | Article title |
-| description | text | Article content |
+| Attribute      | Type     | Description      |
+| -------------- | -------- | ---------------- |
+| title          | string   | Article title    |
+| description    | text     | Article content  |
 | published_date | datetime | Publication date |
-| is_archived | boolean | Archive status |
+| is_archived    | boolean  | Archive status   |
 
 ### 4. Generate Code
 
 Click "Generate Scaffold" and the extension will create:
 
 #### Backend Files
+
 - Models/ArticleNews.php
 - Repositories/ArticleNewsRepository.php
 - Support/Interfaces/Repositories/ArticleNewsRepositoryInterface.php
@@ -83,6 +100,7 @@ Click "Generate Scaffold" and the extension will create:
 - Databases/Seeders/ArticleNewsSeeder.php
 
 #### Frontend Files
+
 - Support/Interfaces/Models/ArticleNews.ts
 - Support/Interfaces/Resources/ArticleNewsResource.ts
 - Services/articleNewsServiceHook.ts
@@ -94,50 +112,51 @@ Using this sample model for examples:
 
 **Model: WarehouseItem**  
 **Attributes:**
-- title (string)  
-- description (text)  
-- qty (integer)  
+
+- title (string)
+- description (text)
+- qty (integer)
 
 ### General Naming Variables
 
-| Variable | Description | Example Value |
-|----------|-------------|--------------|
-| {{modelName}} | Raw model name | WarehouseItem |
-| {{modelLowercase}} | Lowercase name | warehouseitem |
-| {{modelUppercase}} | Uppercase name | WAREHOUSEITEM |
-| {{modelCamelCase}} | camelCase name | warehouseItem |
-| {{modelPascalCase}} | PascalCase name | WarehouseItem |
-| {{modelSnakeCase}} | snake_case name | warehouse_item |
-| {{modelKebabCase}} | kebab-case name | warehouse-item |
+| Variable                | Description           | Example Value  |
+| ----------------------- | --------------------- | -------------- |
+| {{modelName}}           | Raw model name        | WarehouseItem  |
+| {{modelLowercase}}      | Lowercase name        | warehouseitem  |
+| {{modelUppercase}}      | Uppercase name        | WAREHOUSEITEM  |
+| {{modelCamelCase}}      | camelCase name        | warehouseItem  |
+| {{modelPascalCase}}     | PascalCase name       | WarehouseItem  |
+| {{modelSnakeCase}}      | snake_case name       | warehouse_item |
+| {{modelKebabCase}}      | kebab-case name       | warehouse-item |
 | {{modelUpperSnakeCase}} | UPPER_SNAKE_CASE name | WAREHOUSE_ITEM |
 
 ### Pluralization Variables
 
-| Variable | Description | Example Value |
-|----------|-------------|--------------|
-| {{modelPlural}} | Pluralized name | WarehouseItems |
-| {{modelPluralLowercase}} | Lowercase plural | warehouseitems |
-| {{tableName}} | Database table name (plural snake_case) | warehouse_items |
+| Variable                 | Description                             | Example Value   |
+| ------------------------ | --------------------------------------- | --------------- |
+| {{modelPlural}}          | Pluralized name                         | WarehouseItems  |
+| {{modelPluralLowercase}} | Lowercase plural                        | warehouseitems  |
+| {{tableName}}            | Database table name (plural snake_case) | warehouse_items |
 
 ### Attribute Variables
 
-| Variable | Description | Example Value |
-|----------|-------------|--------------|
-| {{modelStringAttributesWithComma}} | Comma-separated list of attributes | title, description, qty |
-| {{modelStringAttributesWithCommaQuoted}} | Quoted comma-separated list of attributes | 'title', 'description', 'qty' |
-| {{tsInterfaceProperties}} | TypeScript interface properties | title: string;<br>description: string;<br>qty: number; |
-| {{requestRules}} | Laravel validation rules | 'title' => 'required\|string\|max:255',<br>'description' => 'nullable\|string',<br>'qty' => 'required\|integer', |
-| {{factoryDefinitions}} | Factory definitions | 'title' => $this->faker->word(),<br>'description' => $this->faker->text(),<br>'qty' => $this->faker->numberBetween(1, 100), |
-| {{migrationColumns}} | Full migration column definitions | $table->string('title');<br>$table->text('description')->nullable();<br>$table->integer('qty'); |
-| {{resourceAttributes}} | Resource attributes | 'title' => $this->title,<br>'description' => $this->description,<br>'qty' => $this->qty, |
-| {{modelCasts}} | Model attribute casting | 'qty' => 'integer', |
+| Variable                                 | Description                               | Example Value                                                                                                               |
+| ---------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| {{modelStringAttributesWithComma}}       | Comma-separated list of attributes        | title, description, qty                                                                                                     |
+| {{modelStringAttributesWithCommaQuoted}} | Quoted comma-separated list of attributes | 'title', 'description', 'qty'                                                                                               |
+| {{tsInterfaceProperties}}                | TypeScript interface properties           | title: string;<br>description: string;<br>qty: number;                                                                      |
+| {{requestRules}}                         | Laravel validation rules                  | 'title' => 'required\|string\|max:255',<br>'description' => 'nullable\|string',<br>'qty' => 'required\|integer',            |
+| {{factoryDefinitions}}                   | Factory definitions                       | 'title' => $this->faker->word(),<br>'description' => $this->faker->text(),<br>'qty' => $this->faker->numberBetween(1, 100), |
+| {{migrationColumns}}                     | Full migration column definitions         | $table->string('title');<br>$table->text('description')->nullable();<br>$table->integer('qty');                             |
+| {{resourceAttributes}}                   | Resource attributes                       | 'title' => $this->title,<br>'description' => $this->description,<br>'qty' => $this->qty,                                    |
+| {{modelCasts}}                           | Model attribute casting                   | 'qty' => 'integer',                                                                                                         |
 
 ### Relationship Variables
 
-| Variable | Description | Example Value |
-|----------|-------------|--------------|
-| {{modelRelationships}} | Model relationship methods | public function category()<br>{<br>    return $this->belongsTo(Category::class);<br>} |
-| {{resourceRelationships}} | Resource relationships | 'category' => CategoryResource::make($this->whenLoaded('category')), |
+| Variable                  | Description                | Example Value                                                                      |
+| ------------------------- | -------------------------- | ---------------------------------------------------------------------------------- |
+| {{modelRelationships}}    | Model relationship methods | public function category()<br>{<br> return $this->belongsTo(Category::class);<br>} |
+| {{resourceRelationships}} | Resource relationships     | 'category' => CategoryResource::make($this->whenLoaded('category')),               |
 
 ## Customizing Stubs
 
