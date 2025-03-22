@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\{{modelName}}\Store{{modelName}}Request;
+use App\Http\Requests\{{modelName}}\Update{{modelName}}Request;
+use App\Http\Resources\{{modelName}}Resource;
+use App\Support\Interfaces\Services\{{modelName}}ServiceInterface;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+
+class {{modelName}}Controller extends Controller
+{
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(
+        protected {{modelName}}ServiceInterface ${{modelCamelCase}}Service
+    ) {
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $perPage = $request->input('perPage', 15);
+        ${{modelPluralCamelCase}} = $this->{{modelCamelCase}}Service->getPaginated($request->all(), $perPage);
+        
+        return {{modelName}}Resource::collection(${{modelPluralCamelCase}});
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Store{{modelName}}Request $request): {{modelName}}Resource
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->create($request->validated());
+        
+        return new {{modelName}}Resource(${{modelCamelCase}});
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id): {{modelName}}Resource
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->findOrFail($id);
+        
+        return new {{modelName}}Resource(${{modelCamelCase}});
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Update{{modelName}}Request $request, string $id): {{modelName}}Resource
+    {
+        ${{modelCamelCase}} = $this->{{modelCamelCase}}Service->update($id, $request->validated());
+        
+        return new {{modelName}}Resource(${{modelCamelCase}});
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id): JsonResponse
+    {
+        $this->{{modelCamelCase}}Service->delete($id);
+        
+        return response()->json(['message' => '{{modelName}} deleted successfully']);
+    }
+}

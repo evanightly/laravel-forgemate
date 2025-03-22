@@ -1,0 +1,17 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\{{modelName}};
+use Illuminate\Database\Seeder;
+
+class {{modelName}}Seeder extends Seeder {
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void {
+        // You can customize this seeder to create your own data
+        // Default: Create 10 records
+        {{modelName}}::factory(10)->create();
+    }
+}

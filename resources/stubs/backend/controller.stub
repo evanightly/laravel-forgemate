@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\{{modelName}}\Store{{modelName}}Request;
+use App\Http\Requests\{{modelName}}\Update{{modelName}}Request;
+use App\Http\Resources\{{modelName}}Resource;
+use App\Models\{{modelName}};
+use App\Support\Enums\PermissionEnum;
+use App\Support\Interfaces\Services\{{modelName}}ServiceInterface;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+
+class {{modelName}}Controller extends Controller implements HasMiddleware {
+    public function __construct(protected {{modelName}}ServiceInterface ${{modelCamelCase}}Service) {}
+
+    public static function middleware(): array {
+        return [
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_CREATE->value], ['create', 'store']),
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_UPDATE->value], ['edit', 'update']),
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_READ->value], ['index', 'show']),
+            self::createPermissionMiddleware([PermissionEnum::{{modelUpperSnakeCase}}_DELETE->value], ['destroy']),
+        ];
+    }
+
+    public function index(Request $request) {
+        $perPage = $request->get('perPage', 10);
+        $data = {{modelName}}Resource::collection($this->{{modelCamelCase}}Service->getAllPaginated($request->query(), $perPage));
+
+        if ($this->ajax()) {
+            return $data;
+        }
+
+        return inertia('{{modelName}}/Index');
+    }
+
+    public function create() {
+        return inertia('{{modelName}}/Create');
+    }
+
+    public function store(Store{{modelName}}Request $request) {
+        if ($this->ajax()) {
+            return $this->{{modelCamelCase}}Service->create($request->validated());
+        }
+    }
+
+    public function show({{modelName}} ${{modelCamelCase}}) {
+        $data = {{modelName}}Resource::make(${{modelCamelCase}});
+
+        if ($this->ajax()) {
+            return $data;
+        }
+
+        return inertia('{{modelName}}/Show', compact('data'));
+    }
+
+    public function edit({{modelName}} ${{modelCamelCase}}) {
+        $data = {{modelName}}Resource::make(${{modelCamelCase}});
+
+        return inertia('{{modelName}}/Edit', compact('data'));
+    }
+
+    public function update(Update{{modelName}}Request $request, {{modelName}} ${{modelCamelCase}}) {
+        if ($this->ajax()) {
+            return $this->{{modelCamelCase}}Service->update(${{modelCamelCase}}, $request->validated());
+        }
+    }
+
+    public function destroy({{modelName}} ${{modelCamelCase}}) {
+        if ($this->ajax()) {
+            return $this->{{modelCamelCase}}Service->delete(${{modelCamelCase}});
+        }
+    }
+}

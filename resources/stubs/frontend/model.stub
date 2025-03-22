@@ -1,0 +1,8 @@
+import { Model } from './Model';
+
+/**
+ * {{modelName}} model interface
+ */
+export interface {{modelName}} extends Model {
+    {{tsInterfaceProperties}}
+}
