@@ -1,101 +1,101 @@
 {
-  "name": "laravel-forgemate",
-  "displayName": "Laravel Forgemate",
-  "description": "Laravel scaffolding with service-repository pattern support",
-  "version": "0.1.0",
-  "publisher": "galur-arasy",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/evanightly/laravel-forgemate"
-  },
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "icon": "resources/images/icon.png",
-  "categories": [
-    "Snippets",
-    "Other"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "laravel-forgemate",
-          "title": "Laravel Forgemate",
-          "icon": "resources/icons/laravel-forgemate.svg"
-        }
-      ]
+    "name": "laravel-forgemate",
+    "displayName": "Laravel Forgemate",
+    "description": "Laravel scaffolding with service-repository pattern support",
+    "version": "0.1.1",
+    "publisher": "galur-arasy",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/evanightly/laravel-forgemate"
     },
-    "views": {
-      "laravel-forgemate": [
-        {
-          "id": "laravelForgemateExplorer",
-          "name": "Laravel Forgemate",
-          "icon": "resources/icons/laravel-forgemate.svg"
-        }
-      ]
+    "engines": {
+        "vscode": "^1.85.0"
     },
-    "commands": [
-      {
-        "command": "laravelForgemate.showWebview",
-        "title": "Laravel Forgemate: Open UI Panel"
-      },
-      {
-        "command": "laravelForgemate.generateScaffold",
-        "title": "Laravel Forgemate: Generate Scaffold"
-      },
-      {
-        "command": "laravelForgemate.initializeProject",
-        "title": "Laravel Forgemate: Initialize Project"
-      },
-      {
-        "command": "laravelForgemate.synchronizeStubs",
-        "title": "Laravel Forgemate: Synchronize Stubs"
-      },
-      {
-        "command": "laravelForgemate.refreshExplorer",
-        "title": "Laravel Forgemate: Refresh Explorer"
-      }
+    "icon": "resources/images/icon.png",
+    "categories": [
+        "Snippets",
+        "Other"
     ],
-    "configuration": {
-      "title": "Laravel Forgemate",
-      "properties": {
-        "laravelForgemate.laravelProjectPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to Laravel project (Leave empty to use workspace folder)"
+    "main": "./out/extension.js",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "laravel-forgemate",
+                    "title": "Laravel Forgemate",
+                    "icon": "resources/icons/laravel-forgemate.svg"
+                }
+            ]
         },
-        "laravelForgemate.useCustomStubs": {
-          "type": "boolean",
-          "default": true,
-          "description": "Use custom stubs from Laravel project if available"
+        "views": {
+            "laravel-forgemate": [
+                {
+                    "id": "laravelForgemateExplorer",
+                    "name": "Laravel Forgemate",
+                    "icon": "resources/icons/laravel-forgemate.svg"
+                }
+            ]
         },
-        "laravelForgemate.stubsDirectory": {
-          "type": "string",
-          "default": "stubs/scaffold",
-          "description": "Directory for custom stubs (relative to Laravel project)"
+        "commands": [
+            {
+                "command": "laravelForgemate.showWebview",
+                "title": "Laravel Forgemate: Open UI Panel"
+            },
+            {
+                "command": "laravelForgemate.generateScaffold",
+                "title": "Laravel Forgemate: Generate Scaffold"
+            },
+            {
+                "command": "laravelForgemate.initializeProject",
+                "title": "Laravel Forgemate: Initialize Project"
+            },
+            {
+                "command": "laravelForgemate.synchronizeStubs",
+                "title": "Laravel Forgemate: Synchronize Stubs"
+            },
+            {
+                "command": "laravelForgemate.refreshExplorer",
+                "title": "Laravel Forgemate: Refresh Explorer"
+            }
+        ],
+        "configuration": {
+            "title": "Laravel Forgemate",
+            "properties": {
+                "laravelForgemate.laravelProjectPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to Laravel project (Leave empty to use workspace folder)"
+                },
+                "laravelForgemate.useCustomStubs": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use custom stubs from Laravel project if available"
+                },
+                "laravelForgemate.stubsDirectory": {
+                    "type": "string",
+                    "default": "stubs/scaffold",
+                    "description": "Directory for custom stubs (relative to Laravel project)"
+                }
+            }
         }
-      }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext ts"
+    },
+    "devDependencies": {
+        "@types/node": "^16.11.10",
+        "@types/pluralize": "^0.0.33",
+        "@types/vscode": "^1.80.0",
+        "@typescript-eslint/eslint-plugin": "^5.59.1",
+        "@typescript-eslint/parser": "^5.59.1",
+        "eslint": "^8.39.0",
+        "prettier-plugin-organize-imports": "^4.1.0",
+        "typescript": "^5.0.4"
+    },
+    "dependencies": {
+        "pluralize": "^8.0.0"
     }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
-  },
-  "devDependencies": {
-    "@types/node": "^16.11.10",
-    "@types/pluralize": "^0.0.33",
-    "@types/vscode": "^1.80.0",
-    "@typescript-eslint/eslint-plugin": "^5.59.1",
-    "@typescript-eslint/parser": "^5.59.1",
-    "eslint": "^8.39.0",
-    "prettier-plugin-organize-imports": "^4.1.0",
-    "typescript": "^5.0.4"
-  },
-  "dependencies": {
-    "pluralize": "^8.0.0"
-  }
 }
