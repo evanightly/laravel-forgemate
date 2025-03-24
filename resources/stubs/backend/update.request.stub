@@ -10,7 +10,7 @@ class Update{{modelName}}Request extends FormRequest
     public function rules(): array
     {
         $rules = [
-{{requestRules}}
+            {{requestRules}}
         ];
 
         // Handle custom intents if needed

@@ -3,26 +3,26 @@
 namespace App\Http\Resources;
 
 use App\Traits\Resources\JsonResource\HandlesResourceDataSelection;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class {{modelName}}Resource extends JsonResource
 {
     use HandlesResourceDataSelection;
-    
+
     /**
      * Transform the resource into an array.
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request): array
+    public function toArray($request): array
     {
-        return $this->filterData([
+        $request = [
             'id' => $this->id,
-{{resourceAttributes}}
+            {{resourceAttributes}}
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-{{resourceRelationships}}
-        ], $request);
+            {{resourceRelationships}}
+        ];
+        return $this->filterData($request, $dataSource);
     }
 }
