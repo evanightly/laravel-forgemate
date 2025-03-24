@@ -152,6 +152,9 @@ export class TemplateProcessor {
             '{{modelRelationships}}': this.getModelRelationships(model),
             '{{resourceAttributes}}': this.getResourceAttributes(model.attributes),
             '{{resourceRelationships}}': this.getResourceRelationships(model),
+            '{{frontendResourceRelationImports}}': this.getFrontendResourceRelationImports(model),
+            '{{frontendResourceRelationProperties}}':
+                this.getFrontendResourceRelationProperties(model),
         };
 
         let processedTemplate = template;
@@ -534,6 +537,59 @@ export class TemplateProcessor {
                     return `${this.getIndentation('default')}'${methodName}' => ${relatedPascal}Resource::collection($this->whenLoaded('${methodName}')),`;
                 } else {
                     return `${this.getIndentation('default')}'${methodName}' => new ${relatedPascal}Resource($this->whenLoaded('${methodName}')),`;
+                }
+            })
+            .join('\n');
+    }
+
+    /**
+     * Get frontend resource relationship imports
+     * Generates separate import statements for each related model's resource
+     */
+    private getFrontendResourceRelationImports(model: ModelDefinition): string {
+        if (!model.relationships || model.relationships.length === 0) {
+            return '';
+        }
+
+        // Get unique related models to avoid duplicate imports
+        const uniqueRelatedModels = Array.from(
+            new Set(model.relationships.map((relation) => relation.relatedModel)),
+        );
+
+        return uniqueRelatedModels
+            .map((relatedModel) => {
+                const relatedPascal = this.transformer.toPascalCase(relatedModel);
+                return `import { ${relatedPascal}Resource } from '@/Support/Interfaces/Resources';`;
+            })
+            .join('\n');
+    }
+
+    /**
+     * Get frontend resource relationship properties
+     * Generates interface properties for related models
+     */
+    private getFrontendResourceRelationProperties(model: ModelDefinition): string {
+        if (!model.relationships || model.relationships.length === 0) {
+            return '';
+        }
+
+        return model.relationships
+            .map((relation) => {
+                const relatedPascal = this.transformer.toPascalCase(relation.relatedModel);
+                const methodName =
+                    relation.type === 'belongsTo'
+                        ? this.transformer.toCamelCase(relation.relatedModel)
+                        : relation.type === 'hasOne'
+                          ? this.transformer.toCamelCase(relation.relatedModel)
+                          : this.transformer.toCamelCase(pluralize.plural(relation.relatedModel));
+
+                const isCollection =
+                    relation.type === 'hasMany' || relation.type === 'belongsToMany';
+
+                if (isCollection) {
+                    return `${this.getIndentation('default')}${methodName}?: ${relatedPascal}Resource[];`;
+                } else {
+                    return `${this.getIndentation('default')}${methodName}?: ${relatedPascal}Resource;`;
                 }
             })
             .join('\n');
