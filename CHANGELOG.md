@@ -2,14 +2,8 @@
 
 ## [0.1.4] - 2025-03-26
 
-### Added
-- [Please fill in]
-
-### Changed
-- [Please fill in]
-
 ### Fixed
-- [Please fill in]
+- Handle changelog commit after executing release script
 
 ## [0.1.3] - 2025-03-26
 
