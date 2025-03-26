@@ -188,6 +188,51 @@ Alternatively, you can use the "Laravel Forgemate: Synchronize Stubs" command fr
 
 Customizing stubs gives you complete control over the generated code while still benefiting from the automation that Laravel Forgemate provides!
 
+## Development & Release Process
+
+### Automated Release Process
+
+This extension uses an automated release process to simplify versioning and publishing to the VS Code Marketplace.
+
+#### Making a New Release
+
+1. Make sure your changes are committed to the main branch
+2. Run one of the following commands:
+   ```bash
+   # For patch version bump (0.1.2 -> 0.1.3)
+   npm run release:patch
+   
+   # For minor version bump (0.1.2 -> 0.2.0)
+   npm run release:minor
+   
+   # For major version bump (0.1.2 -> 1.0.0)
+   npm run release:major
+   
+   # For a specific version
+   npm run release:custom 1.2.3
+   ```
+
+3. The script will:
+   - Update version in package.json and package-lock.json
+   - Update CHANGELOG.md with a new version entry
+   - Create a git commit with these changes
+   - Create a git tag for the new version
+
+4. Update the changelog with your specific changes
+5. Push the changes and tag:
+   ```bash
+   git push origin main
+   git push origin v0.1.3  # Use your specific version tag
+   ```
+
+6. The GitHub Action will automatically:
+   - Verify the tag version matches the package.json
+   - Build and package the extension
+   - Publish to the VS Code Marketplace
+   - Create a GitHub Release with the changelog contents
+
+> Note: You need to set up a `VSCE_PAT` secret in your GitHub repository settings with a valid Visual Studio Marketplace Personal Access Token.
+
 ## Support
 
 If you encounter any issues or have feature requests, please file an issue on our [GitHub repository](https://github.com/evanightly/laravel-forgemate).

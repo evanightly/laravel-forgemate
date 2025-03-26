@@ -1,28 +1,44 @@
 name: Publish Extension
 
 on:
-  push:
-    tags:
-      - "v*"
+    push:
+        tags:
+            - 'v*' # Run when a tag is pushed with format vX.Y.Z
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      # - name: Lint and Test
-      #   run: |
-      #     npm run lint
-      #     npm test
+            - name: Verify tag version matches package.json
+              run: |
+                  TAG_VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+                  PKG_VERSION=$(node -p "require('./package.json').version")
+                  if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+                    echo "Error: Tag version ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+                    exit 1
+                  fi
+                  echo "Version match confirmed: $TAG_VERSION"
 
-      - name: Publish
-        run: npx @vscode/vsce publish -p ${{ secrets.VSCE_PAT }}
+            - name: Publish to VS Code Marketplace
+              run: npx @vscode/vsce publish -p ${{ secrets.VSCE_PAT }}
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  draft: false
+                  prerelease: false
+                  files: |
+                      *.vsix
+                  body_path: ${{ github.workspace }}/CHANGELOG.md
+                  token: ${{ secrets.GITHUB_TOKEN }}
