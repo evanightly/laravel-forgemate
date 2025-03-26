@@ -2,7 +2,7 @@
   "name": "laravel-forgemate",
   "displayName": "Laravel Forgemate",
   "description": "Laravel scaffolding with service-repository pattern support",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "galur-arasy",
   "repository": {
     "type": "git",
