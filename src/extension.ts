@@ -17,40 +17,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Initialize UI Provider
     const webviewProvider = new WebviewProvider(context, templateEngine, schemaParser);
-    
-    // Check if this is the first activation
-    const hasInitialized = context.globalState.get('laravelForgemate.hasInitialized');
-    if (!hasInitialized) {
-      // Attempt to initialize the project automatically if it appears to be a Laravel project
-      vscode.window.withProgress({
-        location: vscode.ProgressLocation.Window,
-        title: 'Checking Laravel project structure...'
-      }, async () => {
-        try {
-          const workspaceFolders = vscode.workspace.workspaceFolders;
-          if (workspaceFolders && workspaceFolders.length > 0) {
-            const projectRoot = workspaceFolders[0].uri.fsPath;
-            
-            // Check if this is a Laravel project by looking for artisan
-            const artisanPath = path.join(projectRoot, 'artisan');
-            if (fs.existsSync(artisanPath)) {
-              // Initialize project in background
-              const initializer = new ProjectInitializer(context, templateEngine);
-              await initializer.initialize();
-              
-              // Show success message
-              vscode.window.showInformationMessage('Laravel project initialized successfully!');
-            }
-          }
-        } catch (error) {
-          console.error('Error during auto-initialization:', error);
-          // Don't show error to user during auto-init since it's not explicitly requested
-        }
-        
-        // Mark as initialized regardless of outcome
-        context.globalState.update('laravelForgemate.hasInitialized', true);
-      });
-    }
 
     // Register commands
     registerCommands(context, webviewProvider, templateEngine, schemaParser);

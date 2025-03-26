@@ -2,7 +2,5 @@
   "recommendations": [
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    "felixfbecker.php-intellisense",
-    "phproberto.vscode-php-getters-setters"
   ]
 }
