@@ -192,6 +192,26 @@ Customizing stubs gives you complete control over the generated code while still
 
 If you encounter any issues or have feature requests, please file an issue on our [GitHub repository](https://github.com/evanightly/laravel-forgemate).
 
+## Dev Note
+### Releasing a new version
+1. Update version using the following command
+    - For a patch update (0.1.5 -> 0.1.6)
+        ```
+        npm run version:patch
+        ```
+    - For a minor update (0.1.5 -> 0.2.0)
+        ```
+        npm run version:minor
+        ```
+    - For a major update (0.1.5 -> 1.0.0)
+        ```
+        npm run version:major
+        ```
+2. Push the changes and tags to GitHub:
+    ```
+    npm run publish:extension
+    ```
+
 ## License
 
 This extension is licensed under the MIT License.
