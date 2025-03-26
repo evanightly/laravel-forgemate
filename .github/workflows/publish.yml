@@ -3,26 +3,35 @@ name: Publish Extension
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'  # Triggers on any tag starting with 'v'
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "20"
-
+          cache: 'npm'
+      
       - name: Install dependencies
         run: npm ci
-
-      # - name: Lint and Test
-      #   run: |
-      #     npm run lint
-      #     npm test
-
+      
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      
+      - name: Verify package.json version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$PKG_VERSION" != "$VERSION" ]; then
+            echo "Error: package.json version ($PKG_VERSION) does not match tag version ($VERSION)"
+            exit 1
+          fi
+      
       - name: Publish
         run: npx @vscode/vsce publish -p ${{ secrets.VSCE_PAT }}
