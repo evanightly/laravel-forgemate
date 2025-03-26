@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.3] - 2025-03-26
+## [0.1.4] - 2025-03-26
 
 ### Added
 - [Please fill in]
@@ -10,6 +10,12 @@
 
 ### Fixed
 - [Please fill in]
+
+## [0.1.3] - 2025-03-26
+
+### Fixed
+
+- fix release script to handle vcs commits correctly
 
 ## [0.1.2] - 2025-03-26
 
