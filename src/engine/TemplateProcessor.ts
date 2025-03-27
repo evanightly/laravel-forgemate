@@ -198,7 +198,7 @@ export class TemplateProcessor {
     
     return attributes.map(attr => {
       const tsType = this.getTsType(attr.type, attr.nullable ?? false);
-      return `  ${attr.name}${attr.nullable ? '?' : ''}: ${tsType};`;
+      return `      ${attr.name}${attr.nullable ? '?' : ''}: ${tsType};`;
     }).join('\n');
   }
   
@@ -287,7 +287,7 @@ export class TemplateProcessor {
         rules.push('unique');
       }
       
-      return `'${attr.name}' => ['${rules.join("', '")}'],`;
+      return `            '${attr.name}' => ['${rules.join("', '")}'],`;
     }).join('\n');
   }
   
@@ -453,7 +453,7 @@ export class TemplateProcessor {
     }
     
     return attributes.map(attr => {
-      return `'${attr.name}' => $this->${attr.name},`;
+      return `            '${attr.name}' => $this->${attr.name},`;
     }).join('\n');
   }
   
@@ -476,9 +476,9 @@ export class TemplateProcessor {
       const isCollection = relation.type === 'hasMany' || relation.type === 'belongsToMany';
       
       if (isCollection) {
-        return `'${methodName}' => ${relatedPascal}Resource::collection($this->whenLoaded('${methodName}')),`;
+        return `            '${methodName}' => ${relatedPascal}Resource::collection($this->whenLoaded('${methodName}')),`;
       } else {
-        return `'${methodName}' => new ${relatedPascal}Resource($this->whenLoaded('${methodName}')),`;
+        return `            '${methodName}' => new ${relatedPascal}Resource($this->whenLoaded('${methodName}')),`;
       }
     }).join('\n');
   }
