@@ -160,29 +160,6 @@ export function registerCommands(
     })
   );
   
-  // Initialize project with base structures
-  context.subscriptions.push(
-    vscode.commands.registerCommand('laravelForgemate.initializeProject', async () => {
-      const projectInitializer = new ProjectInitializer(context, templateEngine);
-      
-      try {
-        await vscode.window.withProgress({
-          location: vscode.ProgressLocation.Notification,
-          title: 'Initializing Laravel project...',
-          cancellable: false
-        }, async (progress) => {
-          progress.report({ increment: 30, message: 'Setting up backend files...' });
-          await projectInitializer.initialize();
-          progress.report({ increment: 70, message: 'Project initialized!' });
-        });
-        
-        vscode.window.showInformationMessage('Laravel project initialized successfully!');
-      } catch (error) {
-        vscode.window.showErrorMessage(`Initialization failed: ${(error as Error).message}`);
-      }
-    })
-  );
-  
   // Synchronize stubs
   registerSynchronizeStubsCommand(context, templateEngine);
 
