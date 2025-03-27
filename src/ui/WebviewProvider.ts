@@ -1054,7 +1054,7 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
       const projectRoot = this.getProjectRoot(laravelProjectPath);
       
       // Ensure baseline files are present
-      await this.ensureBaselineFilesExist(projectRoot);
+      // await this.ensureBaselineFilesExist(projectRoot);
       
       // Generate files
       const generatedFiles: string[] = [];
