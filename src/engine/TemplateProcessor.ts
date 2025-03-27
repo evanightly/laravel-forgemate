@@ -1,6 +1,7 @@
-import { ModelDefinition, AttributeDefinition } from '../types/ModelDefinition';
+import { ModelDefinition, AttributeDefinition, RelationshipDefinition } from '../types/ModelDefinition';
 import * as pluralize from 'pluralize';
 import { ModelTransformer } from '../transformers/ModelTransformer';
+import { TemplateFormatUtils } from '../utils/TemplateFormatUtils';
 
 export class TemplateProcessor {
   private transformer: ModelTransformer;
@@ -13,16 +14,12 @@ export class TemplateProcessor {
    * Process a template by replacing template variables with model data
    */
   public processTemplate(template: string, model: ModelDefinition): string {
-    // Replace simple variables first
     let result = this.replaceSimpleVariables(template, model);
-    
-    // Replace conditional sections
     result = this.replaceConditionalSections(result, model);
-    
-    // Replace complex variables
     result = this.replaceComplexVariables(result, model);
     
-    return result;
+    // Apply final formatting for consistent output
+    return TemplateFormatUtils.formatTemplateReplacement(result, {});
   }
   
   /**
@@ -121,7 +118,9 @@ export class TemplateProcessor {
       '{{modelCasts}}': this.getModelCasts(model.attributes),
       '{{modelRelationships}}': this.getModelRelationships(model),
       '{{resourceAttributes}}': this.getResourceAttributes(model.attributes),
-      '{{resourceRelationships}}': this.getResourceRelationships(model)
+      '{{resourceRelationships}}': this.getResourceRelationships(model),
+      '{{tsResourceRelationships}}': this.getTsResourceRelationships(model),
+      '{{tsResourceImports}}': this.getTsResourceRelationshipImports(model)
     };
     
     let processedTemplate = template;
@@ -198,7 +197,7 @@ export class TemplateProcessor {
     
     return attributes.map(attr => {
       const tsType = this.getTsType(attr.type, attr.nullable ?? false);
-      return `      ${attr.name}${attr.nullable ? '?' : ''}: ${tsType};`;
+      return `    ${attr.name}${attr.nullable ? '?' : ''}: ${tsType};`;
     }).join('\n');
   }
   
@@ -479,6 +478,51 @@ export class TemplateProcessor {
         return `            '${methodName}' => ${relatedPascal}Resource::collection($this->whenLoaded('${methodName}')),`;
       } else {
         return `            '${methodName}' => new ${relatedPascal}Resource($this->whenLoaded('${methodName}')),`;
+      }
+    }).join('\n');
+  }
+
+  /**
+   * Get TypeScript resource relationship imports
+   */
+  private getTsResourceRelationshipImports(model: ModelDefinition): string {
+    if (!model.relationships || model.relationships.length === 0) {
+      return '';
+    }
+    
+    // Get unique related models for imports
+    const uniqueRelatedModels = [...new Set(
+      model.relationships.map(relation => this.transformer.toPascalCase(relation.relatedModel))
+    )];
+    
+    // Create import statements
+    return uniqueRelatedModels
+      .map(relatedModel => `import { ${relatedModel}Resource } from './${relatedModel}Resource';`)
+      .join('\n');
+  }
+
+  /**
+   * Get TypeScript resource relationship properties
+   */
+  private getTsResourceRelationships(model: ModelDefinition): string {
+    if (!model.relationships || model.relationships.length === 0) {
+      return '';
+    }
+    
+    return model.relationships.map(relation => {
+      const relatedPascal = this.transformer.toPascalCase(relation.relatedModel);
+      const methodName = relation.type === 'belongsTo' ? 
+        this.transformer.toCamelCase(relation.relatedModel) : 
+        (relation.type === 'hasOne' ? 
+          this.transformer.toCamelCase(relation.relatedModel) : 
+          this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+      
+      const isCollection = relation.type === 'hasMany' || relation.type === 'belongsToMany';
+      
+      if (isCollection) {
+        return `    ${methodName}?: ${relatedPascal}Resource[];`;
+      } else {
+        return `    ${methodName}?: ${relatedPascal}Resource;`;
       }
     }).join('\n');
   }

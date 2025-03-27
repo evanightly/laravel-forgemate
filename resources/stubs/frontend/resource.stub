@@ -1,9 +1,7 @@
-import { Resource } from './Resource';
-import { {{modelName}} } from '../Models/{{modelName}}';
+import { Resource } from '@/Support/Interfaces/Resources';
+import { {{modelName}} } from '@/Support/Interfaces/Models';
+{{tsResourceImports}}
 
-/**
- * {{modelName}}Resource interface
- */
 export interface {{modelName}}Resource extends Resource, {{modelName}} {
-    // Add additional resource properties here
+{{tsResourceRelationships}}
 }
