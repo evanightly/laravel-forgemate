@@ -14,7 +14,7 @@ class Update{{modelName}}Request extends FormRequest
         ];
 
         // Handle custom intents if needed
-        switch ($this->input('_intent')) {
+        switch ($this->get('intent')) {
             case IntentEnum::CUSTOM_ACTION->value:
                 // Add custom validation for specific actions
                 break;
