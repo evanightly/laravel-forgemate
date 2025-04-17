@@ -55,9 +55,19 @@
       },
       {
         "command": "laravelForgemate.refreshExplorer",
-        "title": "Laravel Forgemate: Refresh Explorer"
+        "title": "Laravel Forgemate: Refresh Explorer",
+        "icon": "$(refresh)"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "laravelForgemate.refreshExplorer",
+          "when": "view == laravelForgemateExplorer",
+          "group": "navigation"
+        }
+      ]
+    },
     "configuration": {
       "title": "Laravel Forgemate",
       "properties": {
