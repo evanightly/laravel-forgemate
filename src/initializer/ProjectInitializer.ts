@@ -171,14 +171,25 @@ export class ProjectInitializer {
    * Create all frontend files
    */
   private async createFrontendFiles(projectRoot: string): Promise<void> {
-    // Create frontend directories
+    // Get configuration
+    const config = vscode.workspace.getConfiguration('laravelForgemate');
+    
+    // Get custom frontend paths from configuration, with defaults if not specified
+    const modelsPath = config.get<string>('frontendModelsPath', 'resources/js/Support/Interfaces/Models');
+    const resourcesPath = config.get<string>('frontendResourcesPath', 'resources/js/Support/Interfaces/Resources');
+    const othersPath = config.get<string>('frontendOthersPath', 'resources/js/Support/Interfaces/Others');
+    const constantsPath = config.get<string>('frontendConstantsPath', 'resources/js/Support/Constants');
+    const servicesPath = config.get<string>('frontendServicesPath', 'resources/js/Services');
+    const helpersPath = config.get<string>('frontendHelpersPath', 'resources/js/Helpers');
+    
+    // Create directories for each path
     const frontendDirs = [
-      'resources/js/Support/Interfaces/Models',
-      'resources/js/Support/Interfaces/Resources',
-      'resources/js/Support/Interfaces/Others',
-      'resources/js/Support/Constants',
-      'resources/js/Services',
-      'resources/js/Helpers'
+      modelsPath,
+      resourcesPath,
+      othersPath,
+      constantsPath,
+      servicesPath,
+      helpersPath
     ];
 
     frontendDirs.forEach(dir => {
@@ -189,22 +200,22 @@ export class ProjectInitializer {
     });
 
     // Create frontend model interfaces
-    await this.createModelInterfaces(projectRoot);
+    await this.createModelInterfaces(projectRoot, modelsPath);
     
     // Create frontend resource interfaces
-    await this.createResourceInterfaces(projectRoot);
+    await this.createResourceInterfaces(projectRoot, resourcesPath);
     
     // Create other interfaces
-    await this.createOtherInterfaces(projectRoot);
+    await this.createOtherInterfaces(projectRoot, othersPath);
     
     // Create constants
-    await this.createConstants(projectRoot);
+    await this.createConstants(projectRoot, constantsPath);
     
     // Create service hooks factory
-    await this.createServiceHooksFactory(projectRoot);
+    await this.createServiceHooksFactory(projectRoot, servicesPath);
     
     // Create helpers
-    await this.createHelpers(projectRoot);
+    await this.createHelpers(projectRoot, helpersPath);
   }
   
   /**
@@ -390,16 +401,16 @@ export class ProjectInitializer {
   /**
    * Create model interfaces
    */
-  private async createModelInterfaces(projectRoot: string): Promise<void> {
+  private async createModelInterfaces(projectRoot: string, modelsPath: string): Promise<void> {
     // Create base model interface
-    const baseModelPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Models/Model.ts');
+    const baseModelPath = path.join(projectRoot, modelsPath, 'Model.ts');
     if (!fs.existsSync(baseModelPath)) {
       const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/models/model');
       fs.writeFileSync(baseModelPath, content);
     }
 
     // Create index file
-    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Models/index.ts');
+    const indexPath = path.join(projectRoot, modelsPath, 'index.ts');
     if (!fs.existsSync(indexPath)) {
       const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/models/index');
       fs.writeFileSync(indexPath, content);
@@ -409,16 +420,16 @@ export class ProjectInitializer {
   /**
    * Create resource interfaces
    */
-  private async createResourceInterfaces(projectRoot: string): Promise<void> {
+  private async createResourceInterfaces(projectRoot: string, resourcesPath: string): Promise<void> {
     // Create base resource interface
-    const baseResourcePath = path.join(projectRoot, 'resources/js/Support/Interfaces/Resources/Resource.ts');
+    const baseResourcePath = path.join(projectRoot, resourcesPath, 'Resource.ts');
     if (!fs.existsSync(baseResourcePath)) {
       const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/resources/resource');
       fs.writeFileSync(baseResourcePath, content);
     }
 
     // Create index file
-    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Resources/index.ts');
+    const indexPath = path.join(projectRoot, resourcesPath, 'index.ts');
     if (!fs.existsSync(indexPath)) {
       const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/resources/index');
       fs.writeFileSync(indexPath, content);
@@ -428,7 +439,7 @@ export class ProjectInitializer {
   /**
    * Create other interfaces
    */
-  private async createOtherInterfaces(projectRoot: string): Promise<void> {
+  private async createOtherInterfaces(projectRoot: string, othersPath: string): Promise<void> {
     const interfaces = [
       { name: 'PaginateMeta', stub: 'initializers/frontend/support/interfaces/others/paginate-meta' },
       { name: 'PaginateMetaLink', stub: 'initializers/frontend/support/interfaces/others/paginate-meta-link' },
@@ -440,7 +451,7 @@ export class ProjectInitializer {
     ];
 
     for (const item of interfaces) {
-      const filePath = path.join(projectRoot, `resources/js/Support/Interfaces/Others/${item.name}.ts`);
+      const filePath = path.join(projectRoot, othersPath, `${item.name}.ts`);
       const dirPath = path.dirname(filePath);
       
       if (!fs.existsSync(dirPath)) {
@@ -458,7 +469,7 @@ export class ProjectInitializer {
     }
 
     // Create index file
-    const indexPath = path.join(projectRoot, 'resources/js/Support/Interfaces/Others/index.ts');
+    const indexPath = path.join(projectRoot, othersPath, 'index.ts');
     if (!fs.existsSync(indexPath)) {
       const content = await this.templateEngine.getStubContent('initializers/frontend/support/interfaces/others/index');
       fs.writeFileSync(indexPath, content);
@@ -468,7 +479,7 @@ export class ProjectInitializer {
   /**
    * Create constants
    */
-  private async createConstants(projectRoot: string): Promise<void> {
+  private async createConstants(projectRoot: string, constantsPath: string): Promise<void> {
     const constants = [
       { name: 'routes', stub: 'initializers/frontend/support/constants/routes' },
       { name: 'tanstackQueryKeys', stub: 'initializers/frontend/support/constants/tanstack-query-keys' },
@@ -478,7 +489,7 @@ export class ProjectInitializer {
     ];
 
     for (const constant of constants) {
-      const filePath = path.join(projectRoot, `resources/js/Support/Constants/${constant.name}.ts`);
+      const filePath = path.join(projectRoot, constantsPath, `${constant.name}.ts`);
       const dirPath = path.dirname(filePath);
       
       if (!fs.existsSync(dirPath)) {
@@ -499,8 +510,8 @@ export class ProjectInitializer {
   /**
    * Create service hooks factory
    */
-  private async createServiceHooksFactory(projectRoot: string): Promise<void> {
-    const filePath = path.join(projectRoot, 'resources/js/Services/serviceHooksFactory.ts');
+  private async createServiceHooksFactory(projectRoot: string, servicesPath: string): Promise<void> {
+    const filePath = path.join(projectRoot, servicesPath, 'serviceHooksFactory.ts');
     const dirPath = path.dirname(filePath);
     
     if (!fs.existsSync(dirPath)) {
@@ -520,8 +531,8 @@ export class ProjectInitializer {
   /**
    * Create helpers
    */
-  private async createHelpers(projectRoot: string): Promise<void> {
-    const filePath = path.join(projectRoot, 'resources/js/Helpers/index.ts');
+  private async createHelpers(projectRoot: string, helpersPath: string): Promise<void> {
+    const filePath = path.join(projectRoot, helpersPath, 'index.ts');
     const dirPath = path.dirname(filePath);
     
     if (!fs.existsSync(dirPath)) {

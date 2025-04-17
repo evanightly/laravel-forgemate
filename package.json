@@ -75,6 +75,36 @@
           "type": "string",
           "default": "stubs/scaffold",
           "description": "Directory for custom stubs (relative to Laravel project)"
+        },
+        "laravelForgemate.frontendModelsPath": {
+          "type": "string",
+          "default": "resources/js/Support/Interfaces/Models",
+          "description": "Custom path for frontend model interfaces"
+        },
+        "laravelForgemate.frontendResourcesPath": {
+          "type": "string",
+          "default": "resources/js/Support/Interfaces/Resources",
+          "description": "Custom path for frontend resource interfaces"
+        },
+        "laravelForgemate.frontendServicesPath": {
+          "type": "string",
+          "default": "resources/js/Services",
+          "description": "Custom path for frontend services"
+        },
+        "laravelForgemate.frontendConstantsPath": {
+          "type": "string",
+          "default": "resources/js/Support/Constants",
+          "description": "Custom path for frontend constants"
+        },
+        "laravelForgemate.frontendHelpersPath": {
+          "type": "string",
+          "default": "resources/js/Helpers",
+          "description": "Custom path for frontend helpers"
+        },
+        "laravelForgemate.frontendOthersPath": {
+          "type": "string",
+          "default": "resources/js/Support/Interfaces/Others",
+          "description": "Custom path for other frontend interfaces"
         }
       }
     }

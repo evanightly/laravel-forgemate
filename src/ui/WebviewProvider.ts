@@ -235,31 +235,41 @@ export class WebviewProvider {
     }
     
     try {
+      // Get configuration
+      const config = vscode.workspace.getConfiguration('laravelForgemate');
+      
+      // Get custom frontend paths from configuration, with defaults if not specified
+      const modelsPath = config.get<string>('frontendModelsPath', 'Support/Interfaces/Models');
+      const resourcesPath = config.get<string>('frontendResourcesPath', 'Support/Interfaces/Resources');
+      const servicesPath = config.get<string>('frontendServicesPath', 'Services');
+      const constantsPath = config.get<string>('frontendConstantsPath', 'Support/Constants');
+      
+      // Determine base js directory
       const jsRoot = path.join(projectRoot, 'resources/js');
       
       // Create model interface
-      const modelInterfacePath = path.join(jsRoot, `Support/Interfaces/Models/${model.name}.ts`);
+      const modelInterfacePath = path.join(jsRoot, `${modelsPath}/${model.name}.ts`);
       await this.templateEngine.generateFile('frontend/model', model, modelInterfacePath);
       generatedFiles.push(modelInterfacePath);
       
       // Create resource interface
-      const resourceInterfacePath = path.join(jsRoot, `Support/Interfaces/Resources/${model.name}Resource.ts`);
+      const resourceInterfacePath = path.join(jsRoot, `${resourcesPath}/${model.name}Resource.ts`);
       await this.templateEngine.generateFile('frontend/resource', model, resourceInterfacePath);
       generatedFiles.push(resourceInterfacePath);
       
       // Create service hook
-      const serviceHookPath = path.join(jsRoot, `Services/${this.toCamelCase(model.name)}ServiceHook.ts`);
+      const serviceHookPath = path.join(jsRoot, `${servicesPath}/${this.toCamelCase(model.name)}ServiceHook.ts`);
       await this.templateEngine.generateFile('frontend/service.hook', model, serviceHookPath);
       generatedFiles.push(serviceHookPath);
       
       // Update exports in model index.ts
-      await this.updateModelExports(jsRoot, model.name);
+      await this.updateModelExports(jsRoot, model.name, modelsPath);
       
       // Update exports in resource index.ts
-      await this.updateResourceExports(jsRoot, model.name);
+      await this.updateResourceExports(jsRoot, model.name, resourcesPath);
       
       // Update routes.ts with new route
-      await this.updateRoutes(jsRoot, model);
+      await this.updateRoutes(jsRoot, model, constantsPath);
       
     } catch (error) {
       console.error('Error generating frontend files:', error);
@@ -369,9 +379,9 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
   /**
    * Update model index.ts exports with new model
    */
-  private async updateModelExports(jsRoot: string, modelName: string): Promise<void> {
+  private async updateModelExports(jsRoot: string, modelName: string, modelsPath: string): Promise<void> {
     try {
-      const modelIndexPath = path.join(jsRoot, 'Support/Interfaces/Models/index.ts');
+      const modelIndexPath = path.join(jsRoot, `${modelsPath}/index.ts`);
       
       if (!fs.existsSync(modelIndexPath)) {
         return;
@@ -395,9 +405,9 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
   /**
    * Update resource index.ts exports with new resource
    */
-  private async updateResourceExports(jsRoot: string, modelName: string): Promise<void> {
+  private async updateResourceExports(jsRoot: string, modelName: string, resourcesPath: string): Promise<void> {
     try {
-      const resourceIndexPath = path.join(jsRoot, 'Support/Interfaces/Resources/index.ts');
+      const resourceIndexPath = path.join(jsRoot, `${resourcesPath}/index.ts`);
       
       if (!fs.existsSync(resourceIndexPath)) {
         return;
@@ -421,9 +431,9 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
   /**
    * Update routes.ts with new route
    */
-  private async updateRoutes(jsRoot: string, model: ModelDefinition): Promise<void> {
+  private async updateRoutes(jsRoot: string, model: ModelDefinition, constantsPath: string): Promise<void> {
     try {
-      const routesPath = path.join(jsRoot, 'Support/Constants/routes.ts');
+      const routesPath = path.join(jsRoot, `${constantsPath}/routes.ts`);
       
       if (!fs.existsSync(routesPath)) {
         return;
