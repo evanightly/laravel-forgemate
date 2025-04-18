@@ -712,6 +712,20 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
             </div>
           </div>
         </div>
+        
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3">Naming Format Options</h3>
+          <div class="grid grid-cols-1 gap-y-3">
+            <div class="flex flex-col">
+              <label for="relationNameFormat" class="font-medium mb-1">Relationship Naming Format:</label>
+              <select id="relationNameFormat" class="p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded">
+                <option value="camelCase">camelCase (e.g., productCategories)</option>
+                <option value="snake_case">snake_case (e.g., product_categories)</option>
+              </select>
+              <p class="text-xs mt-1 text-gray-500">Format used for relationship method names in models and resources.</p>
+            </div>
+          </div>
+        </div>
       </div>
       
       <button id="generate" class="px-6 py-2 bg-vscodeButtonBackground text-vscodeButtonForeground rounded-md hover:bg-vscodeButtonHoverBackground transition-colors">
@@ -764,10 +778,10 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
             attributeRow.dataset.id = attributeId;
             
             attributeRow.innerHTML = \`
-              <div class="col-span-4">
+              <div class="col-span-3">
                 <input type="text" placeholder="Attribute Name" class="attr-name w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded" />
               </div>
-              <div class="col-span-4">
+              <div class="col-span-3">
                 <select class="attr-type w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded">
                   <option value="string">String</option>
                   <option value="text">Text</option>
@@ -783,7 +797,10 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
                   <option value="uuid">UUID</option>
                 </select>
               </div>
-              <div class="col-span-3 flex gap-3">
+              <div class="col-span-3">
+                <input type="text" placeholder="Default Value" class="attr-default w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded" />
+              </div>
+              <div class="col-span-2 flex gap-3">
                 <div class="flex items-center">
                   <input type="checkbox" class="attr-nullable mr-2" />
                   <label class="text-sm">Nullable</label>
@@ -873,6 +890,7 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
                 id: row.dataset.id,
                 name: row.querySelector('.attr-name').value,
                 type: row.querySelector('.attr-type').value,
+                defaultValue: row.querySelector('.attr-default').value,
                 nullable: row.querySelector('.attr-nullable').checked,
                 unique: row.querySelector('.attr-unique').checked
               });
@@ -908,7 +926,8 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
                 generateRepository: document.getElementById('generateRepository').checked,
                 generateRequests: document.getElementById('generateRequests').checked,
                 generateResource: document.getElementById('generateResource').checked,
-                generateFrontend: document.getElementById('generateFrontend').checked
+                generateFrontend: document.getElementById('generateFrontend').checked,
+                relationNameFormat: document.getElementById('relationNameFormat')?.value || 'camelCase'
               }
             };
             

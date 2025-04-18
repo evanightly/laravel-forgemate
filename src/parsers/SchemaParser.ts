@@ -44,7 +44,7 @@ export class SchemaParser {
         // Extract default value if present
         const defaultMatch = modifiers.match(/default\(['"]?([^'")]+)['"]?\)/);
         if (defaultMatch) {
-          attribute.default = defaultMatch[1];
+          attribute.defaultValue = defaultMatch[1];
         }
         
         // Extract max length if specified for string type

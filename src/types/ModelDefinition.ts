@@ -15,7 +15,7 @@ export interface AttributeDefinition {
   type: string;
   nullable?: boolean;
   unique?: boolean;
-  default?: any;
+  defaultValue?: any;
   unsigned?: boolean;
   index?: boolean;
   maxLength?: number;
@@ -46,4 +46,5 @@ export interface GenerationOptions {
   generateResource?: boolean;
   generateFrontend?: boolean;
   generateRoutes?: boolean;
+  relationNameFormat?: 'camelCase' | 'snake_case';
 }

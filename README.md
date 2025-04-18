@@ -175,6 +175,32 @@ Using this sample model for examples:
 | {{modelRelationships}}    | Model relationship methods | public function category()<br>{<br> return $this->belongsTo(Category::class);<br>} |
 | {{resourceRelationships}} | Resource relationships     | 'category' => CategoryResource::make($this->whenLoaded('category')),               |
 
+### Attribute Default Values
+
+Laravel Forgemate now supports specifying default values for model attributes directly in the UI. This allows you to:
+
+1. Set default values for database columns in migrations
+2. Use those same default values in factories for testing
+3. Ensure consistent behavior across your application
+
+When adding an attribute in the UI, you can now specify a default value that will be appropriately formatted based on the attribute's data type:
+
+| Data Type | Default Value Example | Migration Result                         |
+| --------- | --------------------- | ---------------------------------------- |
+| string    | "Draft"               | ->default('Draft')                       |
+| integer   | 0                     | ->default(0)                             |
+| boolean   | true                  | ->default(true)                          |
+| json      | {"key": "value"}      | ->default(json_encode({"key": "value"})) |
+
+This feature is particularly useful for:
+
+- Boolean flags (is_active, is_featured, etc.)
+- Status fields (status = "draft")
+- Counters (views = 0)
+- Default JSON configuration
+
+The default values are intelligently handled in both migrations and factories, ensuring consistency throughout your application.
+
 ## Customizing Stubs
 
 One of Laravel Forgemate's most powerful features is the ability to customize the templates (stubs) used for code generation. This allows you to tailor the generated code to match your project's coding style and requirements.

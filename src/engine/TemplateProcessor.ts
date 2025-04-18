@@ -167,9 +167,38 @@ export class TemplateProcessor {
         modifiers.push('unique()');
       }
       
-      if (attr.default !== undefined) {
-        const defaultValue = typeof attr.default === 'string' ? `'${attr.default}'` : attr.default;
-        modifiers.push(`default(${defaultValue})`);
+      // Process default value if specified
+      if (attr.defaultValue !== undefined && attr.defaultValue !== '') {
+        let defaultVal;
+        
+        // Format the default value based on attribute type
+        switch (attr.type) {
+          case 'boolean':
+            defaultVal = attr.defaultValue.toLowerCase() === 'true' || attr.defaultValue === '1' ? 'true' : 'false';
+            break;
+          case 'integer':
+          case 'bigInteger':
+          case 'decimal':
+          case 'float':
+            // Make sure it's a valid number
+            defaultVal = !isNaN(Number(attr.defaultValue)) ? attr.defaultValue : '0';
+            break;
+          case 'json':
+          case 'jsonb':
+            try {
+              // Try to validate as JSON
+              JSON.parse(attr.defaultValue);
+              defaultVal = `json_encode(${attr.defaultValue})`;
+            } catch (e) {
+              defaultVal = "'{}'";
+            }
+            break;
+          default:
+            // For strings, text, dates, etc.
+            defaultVal = `'${attr.defaultValue}'`;
+        }
+        
+        modifiers.push(`default(${defaultVal})`);
       }
       
       if (attr.unsigned) {
@@ -300,6 +329,41 @@ export class TemplateProcessor {
     }
     
     return attributes.map(attr => {
+      // Check if there's a default value specified
+      if (attr.defaultValue !== undefined && attr.defaultValue !== '') {
+        let defaultVal;
+        
+        // Format the default value based on attribute type
+        switch (attr.type) {
+          case 'boolean':
+            defaultVal = attr.defaultValue.toLowerCase() === 'true' || attr.defaultValue === '1' ? 'true' : 'false';
+            return `            '${attr.name}' => ${defaultVal},`;
+          case 'integer':
+          case 'bigInteger':
+          case 'decimal':
+          case 'float':
+            // Make sure it's a valid number
+            if (!isNaN(Number(attr.defaultValue))) {
+              return `            '${attr.name}' => ${attr.defaultValue},`;
+            }
+            break;
+          case 'json':
+          case 'jsonb':
+            try {
+              // Try to validate as JSON
+              JSON.parse(attr.defaultValue);
+              return `            '${attr.name}' => json_encode(${attr.defaultValue}),`;
+            } catch (e) {
+              // If not valid JSON, fall back to faker
+            }
+            break;
+          default:
+            // For strings, text, dates, etc.
+            return `            '${attr.name}' => '${attr.defaultValue}',`;
+        }
+      }
+      
+      // If no default value or invalid default, use faker
       // Determine faker method based on type
       let fakerMethod: string;
       
