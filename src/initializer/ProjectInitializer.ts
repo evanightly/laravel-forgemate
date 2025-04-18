@@ -100,8 +100,28 @@ export class ProjectInitializer {
    * Get project root from config or workspace
    */
   private getProjectRoot(customPath: string): string {
-    if (customPath && fs.existsSync(customPath)) {
-      return customPath;
+    if (customPath) {
+      // Handle relative paths
+      if (!path.isAbsolute(customPath)) {
+        // Get workspace folder as the base for relative paths
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+          throw new Error('Cannot resolve relative path: No workspace folder is open');
+        }
+        
+        // Join workspace path with the relative path
+        const resolvedPath = path.join(workspaceFolders[0].uri.fsPath, customPath);
+        if (fs.existsSync(resolvedPath)) {
+          return resolvedPath;
+        }
+        throw new Error(`The relative path "${customPath}" could not be resolved from the current workspace`);
+      }
+      
+      // For absolute paths, check if they exist
+      if (fs.existsSync(customPath)) {
+        return customPath;
+      }
+      throw new Error(`The path "${customPath}" does not exist`);
     }
     
     const workspaceFolders = vscode.workspace.workspaceFolders;
