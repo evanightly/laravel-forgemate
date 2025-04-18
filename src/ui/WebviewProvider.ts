@@ -6,6 +6,7 @@ import { TreeDataProvider } from './TreeDataProvider';
 import path from 'path';
 import fs from 'fs';
 import { ProjectInitializer } from '../initializer/ProjectInitializer';
+import { getProjectRoot, validateLaravelProject } from '../utils/PathUtils';
 
 export class WebviewProvider {
   private panel: vscode.WebviewPanel | undefined;
@@ -67,7 +68,7 @@ export class WebviewProvider {
     const config = vscode.workspace.getConfiguration('laravelForgemate');
     const laravelProjectPath = config.get<string>('laravelProjectPath', '');
     
-    const projectRoot = this.getProjectRoot(laravelProjectPath);
+    const projectRoot = getProjectRoot(laravelProjectPath, validateLaravelProject);
     
     // Generate files based on model definition
     await this.generateBackendFiles(model, projectRoot, generatedFiles);
@@ -1006,7 +1007,7 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
     try {
       const config = vscode.workspace.getConfiguration('laravelForgemate');
       const laravelProjectPath = config.get<string>('laravelProjectPath', '');
-      const projectRoot = this.getProjectRoot(laravelProjectPath);
+      const projectRoot = getProjectRoot(laravelProjectPath);
       const modelsDir = path.join(projectRoot, 'app/Models');
       let models: string[] = [];
       
@@ -1041,7 +1042,7 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
       // Configure project paths
       const config = vscode.workspace.getConfiguration('laravelForgemate');
       const laravelProjectPath = config.get<string>('laravelProjectPath', '');
-      const projectRoot = this.getProjectRoot(laravelProjectPath);
+      const projectRoot = getProjectRoot(laravelProjectPath, validateLaravelProject);
       
       // Ensure baseline files are present
       // await this.ensureBaselineFilesExist(projectRoot);

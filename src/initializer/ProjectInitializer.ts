@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { TemplateEngine } from '../engine/TemplateEngine';
+import { getProjectRoot, validateLaravelProject } from '../utils/PathUtils';
 
 /**
  * Handles project initialization
@@ -25,7 +26,7 @@ export class ProjectInitializer {
       const laravelProjectPath = config.get<string>('laravelProjectPath', '');
       
       // Get project root
-      const projectRoot = this.getProjectRoot(laravelProjectPath);
+      const projectRoot = getProjectRoot(laravelProjectPath, validateLaravelProject);
       
       // Create backend files
       await this.createBackendFiles(projectRoot);
@@ -93,61 +94,6 @@ export class ProjectInitializer {
     } catch (error) {
       console.error('Error setting up initializer stubs directory:', error);
       return Promise.reject(error);
-    }
-  }
-  
-  /**
-   * Get project root from config or workspace
-   */
-  private getProjectRoot(customPath: string): string {
-    if (customPath) {
-      // Handle relative paths
-      if (!path.isAbsolute(customPath)) {
-        // Get workspace folder as the base for relative paths
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-          throw new Error('Cannot resolve relative path: No workspace folder is open');
-        }
-        
-        // Join workspace path with the relative path
-        const resolvedPath = path.join(workspaceFolders[0].uri.fsPath, customPath);
-        if (fs.existsSync(resolvedPath)) {
-          return resolvedPath;
-        }
-        throw new Error(`The relative path "${customPath}" could not be resolved from the current workspace`);
-      }
-      
-      // For absolute paths, check if they exist
-      if (fs.existsSync(customPath)) {
-        return customPath;
-      }
-      throw new Error(`The path "${customPath}" does not exist`);
-    }
-    
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-      throw new Error('No workspace folder or Laravel project path found');
-    }
-    
-    const projectRoot = workspaceFolders[0].uri.fsPath;
-    
-    // Validate Laravel project
-    this.validateLaravelProject(projectRoot);
-    
-    return projectRoot;
-  }
-
-  /**
-   * Validate that the given path is a Laravel project
-   */
-  private validateLaravelProject(projectRoot: string): void {
-    // Check for key Laravel files/directories
-    const artisanPath = path.join(projectRoot, 'artisan');
-    const appDirPath = path.join(projectRoot, 'app');
-    const configDirPath = path.join(projectRoot, 'config');
-    
-    if (!fs.existsSync(artisanPath) || !fs.existsSync(appDirPath) || !fs.existsSync(configDirPath)) {
-      throw new Error(`The directory at "${projectRoot}" does not appear to be a valid Laravel project`);
     }
   }
 

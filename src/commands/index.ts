@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import { WebviewProvider } from '../ui/WebviewProvider';
 import { TemplateEngine } from '../engine/TemplateEngine';
 import { SchemaParser } from '../parsers/SchemaParser';
 import { ProjectInitializer } from '../initializer/ProjectInitializer';
 import { ModelDefinition } from '../types/ModelDefinition';
+import { getProjectRoot, validateLaravelProject } from '../utils/PathUtils';
 
 /**
  * Register the synchronizeStubs command
@@ -21,18 +21,11 @@ export function registerSynchronizeStubsCommand(
         const config = vscode.workspace.getConfiguration('laravelForgemate');
         const laravelProjectPath = config.get<string>('laravelProjectPath', '');
         
-        // If no custom path is provided, use workspace folder
-        let targetPath = laravelProjectPath;
-        if (!targetPath) {
-          const workspaceFolders = vscode.workspace.workspaceFolders;
-          if (!workspaceFolders || workspaceFolders.length === 0) {
-            throw new Error('No workspace folder found. Please open a folder or set laravelProjectPath in settings.');
-          }
-          targetPath = workspaceFolders[0].uri.fsPath;
-        }
+        // Use the path utils to get the project root
+        const targetPath = getProjectRoot(laravelProjectPath);
         
         const projectInitializer = new ProjectInitializer(context, templateEngine);
-        const copiedFiles = await projectInitializer.synchronizeStubs(targetPath); // Fix: Added targetPath parameter
+        const copiedFiles = await projectInitializer.synchronizeStubs(targetPath);
         
         vscode.window.showInformationMessage(
           `Successfully synchronized ${copiedFiles.length} stub files.`,
@@ -262,40 +255,4 @@ async function collectModelAttributes(): Promise<{ name: string; type: string; n
   }
   
   return attributes;
-}
-
-/**
- * Get project root from config or workspace
- */
-function getProjectRoot(customPath: string): string {
-  if (customPath) {
-    // Handle relative paths
-    if (!path.isAbsolute(customPath)) {
-      // Get workspace folder as the base for relative paths
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (!workspaceFolders || workspaceFolders.length === 0) {
-        throw new Error('Cannot resolve relative path: No workspace folder is open');
-      }
-      
-      // Join workspace path with the relative path
-      const resolvedPath = path.join(workspaceFolders[0].uri.fsPath, customPath);
-      if (fs.existsSync(resolvedPath)) {
-        return resolvedPath;
-      }
-      throw new Error(`The relative path "${customPath}" could not be resolved from the current workspace`);
-    }
-    
-    // For absolute paths, check if they exist
-    if (fs.existsSync(customPath)) {
-      return customPath;
-    }
-    throw new Error(`The path "${customPath}" does not exist`);
-  }
-  
-  const workspaceFolders = vscode.workspace.workspaceFolders;
-  if (!workspaceFolders || workspaceFolders.length === 0) {
-    throw new Error('No workspace folder or Laravel project path found');
-  }
-  
-  return workspaceFolders[0].uri.fsPath;
 }

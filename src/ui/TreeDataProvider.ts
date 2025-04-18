@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { getProjectRootOrNull } from '../utils/PathUtils';
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
@@ -51,7 +52,7 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     try {
       const config = vscode.workspace.getConfiguration('laravelForgemate');
       const laravelProjectPath = config.get<string>('laravelProjectPath', '');
-      const projectRoot = this.getProjectRoot(laravelProjectPath);
+      const projectRoot = getProjectRootOrNull(laravelProjectPath);
       
       if (!projectRoot) {
         return;
@@ -83,39 +84,6 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
       console.error('Error loading models:', error);
       this.models = [];
     }
-  }
-
-  private getProjectRoot(customPath: string): string | null {
-    if (customPath) {
-      // Handle relative paths
-      if (!path.isAbsolute(customPath)) {
-        // Get workspace folder as the base for relative paths
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
-          return null;
-        }
-        
-        // Join workspace path with the relative path
-        const resolvedPath = path.join(workspaceFolders[0].uri.fsPath, customPath);
-        if (fs.existsSync(resolvedPath)) {
-          return resolvedPath;
-        }
-        return null;
-      }
-      
-      // For absolute paths, check if they exist
-      if (fs.existsSync(customPath)) {
-        return customPath;
-      }
-      return null;
-    }
-    
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-      return null;
-    }
-    
-    return workspaceFolders[0].uri.fsPath;
   }
 }
 
