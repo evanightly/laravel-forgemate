@@ -2,6 +2,7 @@ import { ModelDefinition, AttributeDefinition, RelationshipDefinition } from '..
 import * as pluralize from 'pluralize';
 import { ModelTransformer } from '../transformers/ModelTransformer';
 import { TemplateFormatUtils } from '../utils/TemplateFormatUtils';
+import * as vscode from 'vscode';
 
 export class TemplateProcessor {
   private transformer: ModelTransformer;
@@ -398,13 +399,29 @@ export class TemplateProcessor {
       return '';
     }
     
+    // Get relation name format from user configuration
+    const config = vscode.workspace.getConfiguration('laravelForgemate');
+    const relationNameFormat = config.get<string>('relationNameFormat', 'camelCase');
+    
     return model.relationships.map(relation => {
       const relatedPascal = this.transformer.toPascalCase(relation.relatedModel);
-      const methodName = relation.type === 'belongsTo' ? 
-        this.transformer.toCamelCase(relation.relatedModel) : 
-        (relation.type === 'hasOne' ? 
+      
+      // Generate method name according to user's preference
+      let methodName: string;
+      if (relationNameFormat === 'snake_case') {
+        methodName = relation.type === 'belongsTo' ? 
+          this.transformer.toSnakeCase(relation.relatedModel) : 
+          (relation.type === 'hasOne' ? 
+            this.transformer.toSnakeCase(relation.relatedModel) : 
+            this.transformer.toSnakeCase(pluralize.plural(relation.relatedModel)));
+      } else {
+        // Default to camelCase
+        methodName = relation.type === 'belongsTo' ? 
           this.transformer.toCamelCase(relation.relatedModel) : 
-          this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+          (relation.type === 'hasOne' ? 
+            this.transformer.toCamelCase(relation.relatedModel) : 
+            this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+      }
       
       let relationCode = `    /**
      * ${relation.type} relationship with ${relatedPascal}.
@@ -464,13 +481,29 @@ export class TemplateProcessor {
       return '';
     }
     
+    // Get relation name format from user configuration
+    const config = vscode.workspace.getConfiguration('laravelForgemate');
+    const relationNameFormat = config.get<string>('relationNameFormat', 'camelCase');
+    
     return model.relationships.map(relation => {
       const relatedPascal = this.transformer.toPascalCase(relation.relatedModel);
-      const methodName = relation.type === 'belongsTo' ? 
-        this.transformer.toCamelCase(relation.relatedModel) : 
-        (relation.type === 'hasOne' ? 
+      
+      // Generate method name according to user's preference
+      let methodName: string;
+      if (relationNameFormat === 'snake_case') {
+        methodName = relation.type === 'belongsTo' ? 
+          this.transformer.toSnakeCase(relation.relatedModel) : 
+          (relation.type === 'hasOne' ? 
+            this.transformer.toSnakeCase(relation.relatedModel) : 
+            this.transformer.toSnakeCase(pluralize.plural(relation.relatedModel)));
+      } else {
+        // Default to camelCase
+        methodName = relation.type === 'belongsTo' ? 
           this.transformer.toCamelCase(relation.relatedModel) : 
-          this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+          (relation.type === 'hasOne' ? 
+            this.transformer.toCamelCase(relation.relatedModel) : 
+            this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+      }
       
       const isCollection = relation.type === 'hasMany' || relation.type === 'belongsToMany';
       
@@ -509,13 +542,29 @@ export class TemplateProcessor {
       return '';
     }
     
+    // Get relation name format from user configuration
+    const config = vscode.workspace.getConfiguration('laravelForgemate');
+    const relationNameFormat = config.get<string>('relationNameFormat', 'camelCase');
+    
     return model.relationships.map(relation => {
       const relatedPascal = this.transformer.toPascalCase(relation.relatedModel);
-      const methodName = relation.type === 'belongsTo' ? 
-        this.transformer.toCamelCase(relation.relatedModel) : 
-        (relation.type === 'hasOne' ? 
+      
+      // Generate method name according to user's preference
+      let methodName: string;
+      if (relationNameFormat === 'snake_case') {
+        methodName = relation.type === 'belongsTo' ? 
+          this.transformer.toSnakeCase(relation.relatedModel) : 
+          (relation.type === 'hasOne' ? 
+            this.transformer.toSnakeCase(relation.relatedModel) : 
+            this.transformer.toSnakeCase(pluralize.plural(relation.relatedModel)));
+      } else {
+        // Default to camelCase
+        methodName = relation.type === 'belongsTo' ? 
           this.transformer.toCamelCase(relation.relatedModel) : 
-          this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+          (relation.type === 'hasOne' ? 
+            this.transformer.toCamelCase(relation.relatedModel) : 
+            this.transformer.toCamelCase(pluralize.plural(relation.relatedModel)));
+      }
       
       const isCollection = relation.type === 'hasMany' || relation.type === 'belongsToMany';
       

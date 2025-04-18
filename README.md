@@ -28,6 +28,23 @@ Laravel Forgemate is designed to work seamlessly with specific packages by defau
 
 > **Note**: If your project uses different packages, you can customize the stubs to match your tech stack. See the "Customizing Stubs" section below for details.
 
+## Configuration Options
+
+Laravel Forgemate offers several configuration options to customize its behavior:
+
+| Option                                   | Description                                                                            | Default                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `laravelForgemate.laravelProjectPath`    | Path to Laravel project (Leave empty to use workspace folder)                          | `""`                                          |
+| `laravelForgemate.useCustomStubs`        | Use custom stubs from Laravel project if available                                     | `true`                                        |
+| `laravelForgemate.stubsDirectory`        | Directory for custom stubs (relative to Laravel project)                               | `"stubs/scaffold"`                            |
+| `laravelForgemate.relationNameFormat`    | Format for relation method names in models and resources (`camelCase` or `snake_case`) | `"camelCase"`                                 |
+| `laravelForgemate.frontendModelsPath`    | Custom path for frontend model interfaces                                              | `"resources/js/Support/Interfaces/Models"`    |
+| `laravelForgemate.frontendResourcesPath` | Custom path for frontend resource interfaces                                           | `"resources/js/Support/Interfaces/Resources"` |
+| `laravelForgemate.frontendServicesPath`  | Custom path for frontend services                                                      | `"resources/js/Services"`                     |
+| `laravelForgemate.frontendConstantsPath` | Custom path for frontend constants                                                     | `"resources/js/Support/Constants"`            |
+| `laravelForgemate.frontendHelpersPath`   | Custom path for frontend helpers                                                       | `"resources/js/Helpers"`                      |
+| `laravelForgemate.frontendOthersPath`    | Custom path for other frontend interfaces                                              | `"resources/js/Support/Interfaces/Others"`    |
+
 ## Laravel Compatibility
 
 ### Laravel 11+ Support
@@ -193,24 +210,26 @@ Customizing stubs gives you complete control over the generated code while still
 If you encounter any issues or have feature requests, please file an issue on our [GitHub repository](https://github.com/evanightly/laravel-forgemate).
 
 ## Dev Note
+
 ### Releasing a new version
+
 1. Update version using the following command
-    - For a patch update (0.1.5 -> 0.1.6)
-        ```
-        npm run version:patch
-        ```
-    - For a minor update (0.1.5 -> 0.2.0)
-        ```
-        npm run version:minor
-        ```
-    - For a major update (0.1.5 -> 1.0.0)
-        ```
-        npm run version:major
-        ```
+   - For a patch update (0.1.5 -> 0.1.6)
+     ```
+     npm run version:patch
+     ```
+   - For a minor update (0.1.5 -> 0.2.0)
+     ```
+     npm run version:minor
+     ```
+   - For a major update (0.1.5 -> 1.0.0)
+     ```
+     npm run version:major
+     ```
 2. Push the changes and tags to GitHub:
-    ```
-    npm run publish:extension
-    ```
+   ```
+   npm run publish:extension
+   ```
 
 ## License
 

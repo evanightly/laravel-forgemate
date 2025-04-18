@@ -86,6 +86,15 @@
           "default": "stubs/scaffold",
           "description": "Directory for custom stubs (relative to Laravel project)"
         },
+        "laravelForgemate.relationNameFormat": {
+          "type": "string",
+          "enum": [
+            "camelCase",
+            "snake_case"
+          ],
+          "default": "camelCase",
+          "description": "Format for relation method names in models and resources"
+        },
         "laravelForgemate.frontendModelsPath": {
           "type": "string",
           "default": "resources/js/Support/Interfaces/Models",
