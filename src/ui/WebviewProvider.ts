@@ -802,16 +802,16 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
               </div>
               <div class="col-span-2 flex gap-2">
                 <div class="flex items-center">
-                  <input type="checkbox" class="attr-nullable mr-1" />
-                  <label class="text-sm">Nullable</label>
+                  <input type="checkbox" id="attr-nullable-\${attributeId}" class="attr-nullable mr-1" />
+                  <label for="attr-nullable-\${attributeId}" class="text-sm cursor-pointer">Nullable</label>
                 </div>
                 <div class="flex items-center">
-                  <input type="checkbox" class="attr-unique mr-1" />
-                  <label class="text-sm">Unique</label>
+                  <input type="checkbox" id="attr-unique-\${attributeId}" class="attr-unique mr-1" />
+                  <label for="attr-unique-\${attributeId}" class="text-sm cursor-pointer">Unique</label>
                 </div>
                 <div class="flex items-center">
-                  <input type="checkbox" class="attr-index mr-1" />
-                  <label class="text-sm">Index</label>
+                  <input type="checkbox" id="attr-index-\${attributeId}" class="attr-index mr-1" />
+                  <label for="attr-index-\${attributeId}" class="text-sm cursor-pointer">Index</label>
                 </div>
               </div>
               <div class="col-span-1 flex justify-end">
