@@ -559,220 +559,164 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
       return webview.asWebviewUri(onDiskPath);
     };
 
+    const tailwindScriptUri = getResourceUri('js/tailwind.min.js');
+
     return `<!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Laravel Forgemate</title>
+      <script src="${tailwindScriptUri}"></script>
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                laravel: '#FF2D20',
+                vscodeBackground: 'var(--vscode-editor-background)',
+                vscodeForeground: 'var(--vscode-editor-foreground)',
+                vscodeInputBackground: 'var(--vscode-input-background)',
+                vscodeInputForeground: 'var(--vscode-input-foreground)',
+                vscodeInputBorder: 'var(--vscode-input-border)',
+                vscodeButtonBackground: 'var(--vscode-button-background)',
+                vscodeButtonForeground: 'var(--vscode-button-foreground)',
+                vscodeButtonHoverBackground: 'var(--vscode-button-hoverBackground)',
+                vscodePanelBorder: 'var(--vscode-panel-border)',
+              }
+            }
+          }
+        }
+      </script>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-          padding: 20px;
           color: var(--vscode-foreground);
           background-color: var(--vscode-editor-background);
         }
-        h1 {
-          color: var(--vscode-editor-foreground);
-        }
-        .form-group {
-          margin-bottom: 15px;
-        }
-        label {
-          display: inline-block;
-          margin-right: 10px;
-          font-weight: bold;
-        }
-        input, select, textarea {
-          width: 100%;
-          padding: 8px;
-          border: 1px solid var(--vscode-input-border);
-          background-color: var(--vscode-input-background);
-          color: var(--vscode-input-foreground);
-        }
-        button {
-          background-color: var(--vscode-button-background);
-          color: var(--vscode-button-foreground);
-          border: none;
-          padding: 8px 15px;
-          cursor: pointer;
-          margin-top: 10px;
-        }
-        button:hover {
-          background-color: var(--vscode-button-hoverBackground);
-        }
-        .attributes-container {
-          margin-top: 20px;
-          border: 1px solid var(--vscode-panel-border);
-          padding: 15px;
-        }
-        .attribute-row {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
-        .attribute-field {
-          flex: 1;
-        }
-        .attribute-actions {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-        }
-        .tabs {
-          display: flex;
-          margin-bottom: 20px;
-          border-bottom: 1px solid var(--vscode-panel-border);
-        }
-        .tab {
-          padding: 10px 15px;
-          cursor: pointer;
-          border: 1px solid transparent;
-        }
-        .tab.active {
-          border: 1px solid var(--vscode-panel-border);
-          border-bottom: none;
-          background-color: var(--vscode-editor-background);
-          position: relative;
-          top: 1px;
-        }
-        .tab-content {
-          display: none;
-        }
-        .tab-content.active {
-          display: block;
-        }
-        .relationship-row {
-          display: flex;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
-        .checkbox-group {
-          display: flex;
-          gap: 20px;
-          align-items: center;
-        }
-        .checkbox-item {
-          display: flex;
-          align-items: center;
-          margin-right: 15px;
-        }
-        .checkbox-item input[type="checkbox"] {
-          width: auto;
-          margin-right: 5px;
-        }
-        .checkbox-item label {
-          margin-bottom: 0;
-        }
-        .inline-checkboxes {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 15px;
-          margin-top: 5px;
+        
+        /* Base styles that work with Tailwind */
+        input[type="checkbox"] {
+          width: auto !important;
         }
       </style>
     </head>
-    <body>
-      <h1>Laravel Forgemate - Scaffold Generator</h1>
-      <div class="tabs">
-        <div class="tab active" data-tab="basics">Model Basics</div>
-        <div class="tab" data-tab="attributes">Attributes</div>
-        <div class="tab" data-tab="relationships">Relationships</div>
-        <div class="tab" data-tab="options">Generation Options</div>
+    <body class="p-6">
+      <h1 class="text-2xl font-bold mb-6 text-vscodeForeground flex items-center">
+        <svg class="w-8 h-8 mr-2 text-laravel" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
+          <path d="M504.4,115.83a5.72,5.72,0,0,0-.28-.68,8.52,8.52,0,0,0-.53-1.25,6,6,0,0,0-.54-.71,9.36,9.36,0,0,0-.72-.94c-.23-.22-.52-.4-.77-.6a8.84,8.84,0,0,0-.9-.68L404.4,55.55a8,8,0,0,0-8,0L300.12,111h0a8.07,8.07,0,0,0-.88.69,7.68,7.68,0,0,0-.78.6,8.23,8.23,0,0,0-.72.93c-.17.24-.39.45-.54.71a9.7,9.7,0,0,0-.52,1.25c-.08.23-.21.44-.28.68a8.08,8.08,0,0,0-.28,2.08V223.18l-80.22,46.19V63.44a7.8,7.8,0,0,0-.28-2.09c-.06-.24-.2-.45-.28-.68a8.35,8.35,0,0,0-.52-1.24c-.14-.26-.37-.47-.54-.72a9.36,9.36,0,0,0-.72-.94,9.46,9.46,0,0,0-.78-.6,9.8,9.8,0,0,0-.88-.68h0L115.61,1.07a8,8,0,0,0-8,0L11.34,56.49h0a6.52,6.52,0,0,0-.88.69,7.81,7.81,0,0,0-.79.6,8.15,8.15,0,0,0-.71.93c-.18.25-.4.46-.55.72a7.88,7.88,0,0,0-.51,1.24,6.46,6.46,0,0,0-.29.67,8.18,8.18,0,0,0-.28,2.1v329.7a8,8,0,0,0,4,6.95l192.5,110.84a8.83,8.83,0,0,0,1.33.54c.21.08.41.2.63.26a7.92,7.92,0,0,0,4.1,0c.21-.06.42-.18.63-.26a7.44,7.44,0,0,0,1.33-.54L404.4,400.09a8,8,0,0,0,4-6.95V287.88l92.24-53.11a8,8,0,0,0,4-7V117.92A8.63,8.63,0,0,0,504.4,115.83ZM111.6,17.28h0l80.19,46.15-80.2,46.18L31.41,63.44Zm88.25,60V278.6l-46.53,26.79-33.69,19.4V123.5l46.53-26.79Zm0,412.78L23.37,388.5V77.32L57.06,96.7l46.52,26.8V338.68a6.94,6.94,0,0,0,.12.9,8,8,0,0,0,.16,1.18h0a5.92,5.92,0,0,0,.38.9,6.38,6.38,0,0,0,.42,1v0a8.54,8.54,0,0,0,.6.78,7.62,7.62,0,0,0,.66.84l0,0c.23.22.52.38.77.58a8.93,8.93,0,0,0,.86.66l0,0,0,0,92.19,52.18Zm8-106.17-80.06-45.32,84.09-48.41,92.26-53.11,80.13,46.13-58.8,33.56Zm184.52,4.57L215.88,490.11V397.8L346.6,323.2l45.77-26.15Zm0-119.13L358.68,250l-46.53-26.79V131.79l33.69,19.4L392.37,178Zm8-105.28-80.2-46.17,80.2-46.16,80.18,46.15Zm8,105.28V178L455,151.19l33.68-19.4v91.39Z"/>
+        </svg>
+        Laravel Forgemate - Scaffold Generator
+      </h1>
+      
+      <div class="flex border-b border-vscodePanelBorder mb-6">
+        <div class="tab cursor-pointer py-2 px-4 border border-transparent active" data-tab="basics">Model Basics</div>
+        <div class="tab cursor-pointer py-2 px-4 border border-transparent" data-tab="attributes">Attributes</div>
+        <div class="tab cursor-pointer py-2 px-4 border border-transparent" data-tab="relationships">Relationships</div>
+        <div class="tab cursor-pointer py-2 px-4 border border-transparent" data-tab="options">Generation Options</div>
       </div>
+      
       <div class="tab-content active" id="basics-tab">
-        <div class="form-group">
-          <label for="modelName">Model Name:</label>
-          <input type="text" id="modelName" placeholder="e.g. ArticleNews" />
+        <div class="mb-4">
+          <label for="modelName" class="block font-semibold mb-2">Model Name:</label>
+          <input type="text" id="modelName" placeholder="e.g. ArticleNews" 
+                 class="w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded" />
         </div>
         
-        <div class="form-group">
-          <label for="tableName">Table Name (leave empty for default):</label>
-          <input type="text" id="tableName" placeholder="e.g. article_news" />
+        <div class="mb-4">
+          <label for="tableName" class="block font-semibold mb-2">Table Name (leave empty for default):</label>
+          <input type="text" id="tableName" placeholder="e.g. article_news" 
+                 class="w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded" />
         </div>
         
-        <div class="form-group checkbox-group">
-          <div class="checkbox-item">
-            <input type="checkbox" id="timestamps" checked />
-            <label for="timestamps">Include Timestamps</label>
+        <div class="flex gap-6 mb-4">
+          <div class="flex items-center">
+            <input type="checkbox" id="timestamps" checked class="mr-2" />
+            <label for="timestamps" class="font-medium">Include Timestamps</label>
           </div>
-          <div class="checkbox-item">
-            <input type="checkbox" id="softDeletes" />
-            <label for="softDeletes">Use Soft Deletes</label>
+          <div class="flex items-center">
+            <input type="checkbox" id="softDeletes" class="mr-2" />
+            <label for="softDeletes" class="font-medium">Use Soft Deletes</label>
           </div>
         </div>
       </div>
       
-      <div class="tab-content" id="attributes-tab">
-        <div class="attributes-container">
-          <h3>Model Attributes</h3>
-          <div id="attributes-list">
+      <div class="tab-content hidden" id="attributes-tab">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3">Model Attributes</h3>
+          <div id="attributes-list" class="space-y-3">
             <!-- Attributes will be added here -->
           </div>
-          <button id="add-attribute">Add Attribute</button>
+          <button id="add-attribute" class="mt-4 px-4 py-2 bg-vscodeButtonBackground text-vscodeButtonForeground rounded hover:bg-vscodeButtonHoverBackground">
+            Add Attribute
+          </button>
         </div>
       </div>
       
-      <div class="tab-content" id="relationships-tab">
-        <div class="attributes-container">
-          <h3>Model Relationships</h3>
-          <div id="relationships-list">
+      <div class="tab-content hidden" id="relationships-tab">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3">Model Relationships</h3>
+          <div id="relationships-list" class="space-y-3">
             <!-- Relationships will be added here -->
           </div>
-          <button id="add-relationship">Add Relationship</button>
+          <button id="add-relationship" class="mt-4 px-4 py-2 bg-vscodeButtonBackground text-vscodeButtonForeground rounded hover:bg-vscodeButtonHoverBackground">
+            Add Relationship
+          </button>
         </div>
       </div>
       
-      <div class="tab-content" id="options-tab">
-        <div class="form-group">
-          <h3>Generation Options</h3>
-          <div class="inline-checkboxes">
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateMigration" checked />
-              <label for="generateMigration">Generate Migration</label>
+      <div class="tab-content hidden" id="options-tab">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-3">Generation Options</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+            <div class="flex items-center">
+              <input type="checkbox" id="generateMigration" checked class="mr-2" />
+              <label for="generateMigration" class="font-medium">Generate Migration</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateFactory" checked />
-              <label for="generateFactory">Generate Factory</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateFactory" checked class="mr-2" />
+              <label for="generateFactory" class="font-medium">Generate Factory</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateSeeder" />
-              <label for="generateSeeder">Generate Seeder</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateSeeder" class="mr-2" />
+              <label for="generateSeeder" class="font-medium">Generate Seeder</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateController" checked />
-              <label for="generateController">Generate Controller</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateController" checked class="mr-2" />
+              <label for="generateController" class="font-medium">Generate Controller</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateApiController" />
-              <label for="generateApiController">Generate API Controller</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateApiController" class="mr-2" />
+              <label for="generateApiController" class="font-medium">Generate API Controller</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateService" checked />
-              <label for="generateService">Generate Service</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateService" checked class="mr-2" />
+              <label for="generateService" class="font-medium">Generate Service</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateRepository" checked />
-              <label for="generateRepository">Generate Repository</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateRepository" checked class="mr-2" />
+              <label for="generateRepository" class="font-medium">Generate Repository</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateRequests" checked />
-              <label for="generateRequests">Generate Form Requests</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateRequests" checked class="mr-2" />
+              <label for="generateRequests" class="font-medium">Generate Form Requests</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateResource" checked />
-              <label for="generateResource">Generate Resource</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateResource" checked class="mr-2" />
+              <label for="generateResource" class="font-medium">Generate Resource</label>
             </div>
-            <div class="checkbox-item">
-              <input type="checkbox" id="generateFrontend" checked />
-              <label for="generateFrontend">Generate Frontend Files</label>
+            <div class="flex items-center">
+              <input type="checkbox" id="generateFrontend" checked class="mr-2" />
+              <label for="generateFrontend" class="font-medium">Generate Frontend Files</label>
             </div>
           </div>
         </div>
       </div>
       
-      <button id="generate">Generate Scaffold</button>
-      <div id="status" style="margin-top: 20px;"></div>
+      <button id="generate" class="px-6 py-2 bg-vscodeButtonBackground text-vscodeButtonForeground rounded-md hover:bg-vscodeButtonHoverBackground transition-colors">
+        Generate Scaffold
+      </button>
+      <div id="status" class="mt-5 py-2 rounded-md"></div>
       
       <script>
         (function() {
@@ -787,27 +731,43 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
           // Tab handling
           document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
-              document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-              document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+              document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+                t.classList.remove('border-vscodePanelBorder');
+                t.classList.remove('border-b-vscodeBackground');
+                t.classList.remove('bg-vscodeBackground');
+              });
+              document.querySelectorAll('.tab-content').forEach(tc => tc.classList.add('hidden'));
+              
               this.classList.add('active');
-              document.getElementById(this.dataset.tab + '-tab').classList.add('active');
+              this.classList.add('border-vscodePanelBorder');
+              this.classList.add('border-b-vscodeBackground');
+              this.classList.add('bg-vscodeBackground');
+              
+              const tabContent = document.getElementById(this.dataset.tab + '-tab');
+              tabContent.classList.remove('hidden');
             });
           });
+          
+          // Activate the first tab
+          document.querySelector('.tab.active').classList.add('border-vscodePanelBorder');
+          document.querySelector('.tab.active').classList.add('border-b-vscodeBackground');
+          document.querySelector('.tab.active').classList.add('bg-vscodeBackground');
           
           // Add attribute handling
           document.getElementById('add-attribute').addEventListener('click', function() {
             const attributeId = Date.now(); // Unique ID for the attribute
             const attributesList = document.getElementById('attributes-list');
             const attributeRow = document.createElement('div');
-            attributeRow.className = 'attribute-row';
+            attributeRow.className = 'attribute-row grid grid-cols-12 gap-3 items-center bg-vscodeInputBackground p-3 rounded-md';
             attributeRow.dataset.id = attributeId;
             
             attributeRow.innerHTML = \`
-              <div class="attribute-field">
-                <input type="text" placeholder="Attribute Name" class="attr-name" />
+              <div class="col-span-4">
+                <input type="text" placeholder="Attribute Name" class="attr-name w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded" />
               </div>
-              <div class="attribute-field">
-                <select class="attr-type">
+              <div class="col-span-4">
+                <select class="attr-type w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded">
                   <option value="string">String</option>
                   <option value="text">Text</option>
                   <option value="integer">Integer</option>
@@ -822,18 +782,22 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
                   <option value="uuid">UUID</option>
                 </select>
               </div>
-              <div class="attribute-field" style="display: flex; gap: 10px;">
-                <div class="checkbox-item">
-                  <input type="checkbox" class="attr-nullable" />
-                  <label>Nullable</label>
+              <div class="col-span-3 flex gap-3">
+                <div class="flex items-center">
+                  <input type="checkbox" class="attr-nullable mr-2" />
+                  <label class="text-sm">Nullable</label>
                 </div>
-                <div class="checkbox-item">
-                  <input type="checkbox" class="attr-unique" />
-                  <label>Unique</label>
+                <div class="flex items-center">
+                  <input type="checkbox" class="attr-unique mr-2" />
+                  <label class="text-sm">Unique</label>
                 </div>
               </div>
-              <div class="attribute-actions">
-                <button class="remove-attribute">Remove</button>
+              <div class="col-span-1 flex justify-end">
+                <button class="remove-attribute p-1 bg-red-600 text-white rounded-md hover:bg-red-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
               </div>
             \`;
             
@@ -851,7 +815,7 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
             const relationshipId = Date.now(); // Unique ID for the relationship
             const relationshipsList = document.getElementById('relationships-list');
             const relationshipRow = document.createElement('div');
-            relationshipRow.className = 'relationship-row';
+            relationshipRow.className = 'relationship-row grid grid-cols-12 gap-3 items-center bg-vscodeInputBackground p-3 rounded-md';
             relationshipRow.dataset.id = relationshipId;
             
             // Create model options from available models
@@ -860,25 +824,29 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
               : '<option value="">No models available</option>';
             
             relationshipRow.innerHTML = \`
-              <div class="attribute-field">
-                <select class="rel-type">
+              <div class="col-span-3">
+                <select class="rel-type w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded">
                   <option value="hasOne">Has One</option>
                   <option value="hasMany">Has Many</option>
                   <option value="belongsTo">Belongs To</option>
                   <option value="belongsToMany">Belongs To Many</option>
                 </select>
               </div>
-              <div class="attribute-field">
-                <select class="rel-model">
+              <div class="col-span-4">
+                <select class="rel-model w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded">
                   <option value="">Select Model</option>
                   \${modelOptions}
                 </select>
               </div>
-              <div class="attribute-field">
-                <input type="text" placeholder="Foreign Key (optional)" class="rel-foreign-key" />
+              <div class="col-span-4">
+                <input type="text" placeholder="Foreign Key (optional)" class="rel-foreign-key w-full p-2 border border-vscodeInputBorder bg-vscodeInputBackground text-vscodeInputForeground rounded" />
               </div>
-              <div class="attribute-actions">
-                <button class="remove-relationship">Remove</button>
+              <div class="col-span-1 flex justify-end">
+                <button class="remove-relationship p-1 bg-red-600 text-white rounded-md hover:bg-red-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                  </svg>
+                </button>
               </div>
             \`;
             
@@ -895,6 +863,7 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
           document.getElementById('generate').addEventListener('click', function() {
             const statusElem = document.getElementById('status');
             statusElem.textContent = 'Generating scaffold...';
+            statusElem.className = 'mt-5 py-2 px-4 bg-yellow-100 text-yellow-800 rounded-md';
             
             // Collect attributes
             attributes = [];
@@ -953,13 +922,24 @@ Route::apiResource('${modelKebabCasePlural}', App\\Http\\Controllers\\Api\\${con
               case 'generationComplete':
                 const statusElem = document.getElementById('status');
                 if (message.success) {
-                  statusElem.innerHTML = \`Generation completed successfully! Generated \${message.files.length} files.\`;
+                  statusElem.innerHTML = \`<div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>Generation completed successfully! Generated \${message.files.length} files.</span>
+                  </div>\`;
+                  statusElem.className = 'mt-5 py-2 px-4 bg-green-100 text-green-800 rounded-md';
                 } else {
-                  statusElem.innerHTML = \`Error during generation: \${message.error}\`;
+                  statusElem.innerHTML = \`<div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <span>Error during generation: \${message.error}</span>
+                  </div>\`;
+                  statusElem.className = 'mt-5 py-2 px-4 bg-red-100 text-red-800 rounded-md';
                 }
                 break;
               case 'availableModels':
-                // Update available models list
                 availableModels = message.models || [];
                 // Update any existing relationship selects
                 document.querySelectorAll('.rel-model').forEach(select => {
