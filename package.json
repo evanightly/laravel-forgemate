@@ -2,7 +2,7 @@
   "name": "laravel-forgemate",
   "displayName": "Laravel Forgemate",
   "description": "Laravel scaffolding with service-repository pattern support",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "galur-arasy",
   "repository": {
     "type": "git",
@@ -74,17 +74,20 @@
         "laravelForgemate.laravelProjectPath": {
           "type": "string",
           "default": "",
-          "description": "Path to Laravel project (Leave empty to use workspace folder)"
+          "markdownDescription": "Path to Laravel project root directory. Leave empty to use the current workspace folder.",
+          "scope": "resource"
         },
         "laravelForgemate.useCustomStubs": {
           "type": "boolean",
           "default": true,
-          "description": "Use custom stubs from Laravel project if available"
+          "markdownDescription": "When enabled, Laravel Forgemate will look for custom stubs in the specified directory before using the default stubs.",
+          "scope": "resource"
         },
         "laravelForgemate.stubsDirectory": {
           "type": "string",
           "default": "stubs/scaffold",
-          "description": "Directory for custom stubs (relative to Laravel project)"
+          "markdownDescription": "Directory path (relative to Laravel project root) where custom stubs are stored. Used only when `useCustomStubs` is enabled.",
+          "scope": "resource"
         },
         "laravelForgemate.relationNameFormat": {
           "type": "string",
@@ -92,38 +95,305 @@
             "camelCase",
             "snake_case"
           ],
+          "enumDescriptions": [
+            "Use camelCase for relation methods (e.g., categoryItems)",
+            "Use snake_case for relation methods (e.g., category_items)"
+          ],
           "default": "camelCase",
-          "description": "Format for relation method names in models and resources"
+          "markdownDescription": "Format for relation method names in models and resources. Affects both backend and frontend code generation.",
+          "scope": "resource"
+        },
+        "laravelForgemate.defaultGenerationOptions": {
+          "type": "object",
+          "markdownDescription": "Default options applied to all scaffold generation unless overridden in the UI or by module-specific settings.",
+          "properties": {
+            "generateMigration": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate migration file for database schema"
+            },
+            "generateFactory": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate model factory for testing"
+            },
+            "generateSeeder": {
+              "type": "boolean",
+              "default": false,
+              "description": "Generate database seeder class"
+            },
+            "generateController": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate web controller with resource methods"
+            },
+            "generateApiController": {
+              "type": "boolean",
+              "default": false,
+              "description": "Generate API controller with JSON responses"
+            },
+            "generateService": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate service class and interface"
+            },
+            "generateRepository": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate repository class and interface"
+            },
+            "generateRequests": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate form request validation classes"
+            },
+            "generateResource": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate API resource transformation class"
+            },
+            "generateFrontend": {
+              "type": "boolean",
+              "default": true,
+              "description": "Generate frontend TypeScript files"
+            },
+            "timestamps": {
+              "type": "boolean",
+              "default": true,
+              "description": "Include timestamps (created_at, updated_at) in models"
+            },
+            "softDeletes": {
+              "type": "boolean",
+              "default": false,
+              "description": "Include soft delete functionality in models"
+            },
+            "addRoutes": {
+              "type": "boolean",
+              "default": true,
+              "description": "Automatically add routes to web.php and api.php"
+            },
+            "usePest": {
+              "type": "boolean",
+              "default": false,
+              "description": "Generate Pest tests instead of PHPUnit tests"
+            },
+            "useInvokableControllers": {
+              "type": "boolean",
+              "default": false,
+              "description": "Generate single-action invokable controllers (Laravel 9+)"
+            }
+          },
+          "default": {
+            "generateMigration": true,
+            "generateFactory": true,
+            "generateSeeder": false,
+            "generateController": true,
+            "generateApiController": false,
+            "generateService": true,
+            "generateRepository": true,
+            "generateRequests": true,
+            "generateResource": true,
+            "generateFrontend": true,
+            "timestamps": true,
+            "softDeletes": false,
+            "addRoutes": true,
+            "usePest": false,
+            "useInvokableControllers": false
+          },
+          "scope": "resource"
+        },
+        "laravelForgemate.defaultModelAttributes": {
+          "type": "object",
+          "markdownDescription": "Default attributes to include in all models unless overridden. Example: ```json\n{\n  \"created_by\": {\n    \"type\": \"foreignId\",\n    \"nullable\": true,\n    \"index\": true\n  }\n}```",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Attribute data type (string, integer, text, etc.)"
+              },
+              "nullable": {
+                "type": "boolean",
+                "description": "Whether the attribute can be null"
+              },
+              "unique": {
+                "type": "boolean",
+                "description": "Whether the attribute should have a unique constraint"
+              },
+              "index": {
+                "type": "boolean",
+                "description": "Whether the attribute should be indexed"
+              },
+              "defaultValue": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
+                ],
+                "description": "Default value for the attribute"
+              }
+            }
+          },
+          "default": {},
+          "scope": "resource"
+        },
+        "laravelForgemate.moduleConfiguration": {
+          "type": "object",
+          "markdownDescription": "Configuration for specific modules or model groups. Example: ```json\n{\n  \"Admin\": {\n    \"path\": \"modules/Admin\",\n    \"namespace\": \"Modules\\\\Admin\"\n  }\n}```",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Custom path for module files"
+              },
+              "namespace": {
+                "type": "string",
+                "description": "PHP namespace for module classes"
+              },
+              "generationOptions": {
+                "type": "object",
+                "description": "Default generation options for this module",
+                "properties": {
+                  "generateMigration": {
+                    "type": "boolean"
+                  },
+                  "generateFactory": {
+                    "type": "boolean"
+                  },
+                  "generateSeeder": {
+                    "type": "boolean"
+                  },
+                  "generateController": {
+                    "type": "boolean"
+                  },
+                  "generateApiController": {
+                    "type": "boolean"
+                  },
+                  "generateService": {
+                    "type": "boolean"
+                  },
+                  "generateRepository": {
+                    "type": "boolean"
+                  },
+                  "generateRequests": {
+                    "type": "boolean"
+                  },
+                  "generateResource": {
+                    "type": "boolean"
+                  },
+                  "generateFrontend": {
+                    "type": "boolean"
+                  },
+                  "timestamps": {
+                    "type": "boolean"
+                  },
+                  "softDeletes": {
+                    "type": "boolean"
+                  },
+                  "addRoutes": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "default": {},
+          "scope": "resource"
+        },
+        "laravelForgemate.frontendPaths": {
+          "type": "object",
+          "markdownDescription": "Configure paths for frontend files relative to your Laravel project root.",
+          "properties": {
+            "modelsPath": {
+              "type": "string",
+              "default": "resources/js/Support/Interfaces/Models",
+              "description": "Path for frontend model interfaces"
+            },
+            "resourcesPath": {
+              "type": "string",
+              "default": "resources/js/Support/Interfaces/Resources",
+              "description": "Path for frontend resource interfaces"
+            },
+            "servicesPath": {
+              "type": "string",
+              "default": "resources/js/Services",
+              "description": "Path for frontend service hooks"
+            },
+            "constantsPath": {
+              "type": "string",
+              "default": "resources/js/Support/Constants",
+              "description": "Path for frontend constants"
+            },
+            "helpersPath": {
+              "type": "string",
+              "default": "resources/js/Helpers",
+              "description": "Path for frontend helpers"
+            },
+            "othersPath": {
+              "type": "string",
+              "default": "resources/js/Support/Interfaces/Others",
+              "description": "Path for other frontend interfaces"
+            },
+            "componentsPath": {
+              "type": "string",
+              "default": "resources/js/Components",
+              "description": "Path for frontend UI components"
+            }
+          },
+          "default": {
+            "modelsPath": "resources/js/Support/Interfaces/Models",
+            "resourcesPath": "resources/js/Support/Interfaces/Resources",
+            "servicesPath": "resources/js/Services",
+            "constantsPath": "resources/js/Support/Constants",
+            "helpersPath": "resources/js/Helpers",
+            "othersPath": "resources/js/Support/Interfaces/Others",
+            "componentsPath": "resources/js/Components"
+          },
+          "scope": "resource"
         },
         "laravelForgemate.frontendModelsPath": {
           "type": "string",
           "default": "resources/js/Support/Interfaces/Models",
-          "description": "Custom path for frontend model interfaces"
+          "markdownDescription": "**Deprecated**: Use `frontendPaths.modelsPath` instead. Path for frontend model interfaces.",
+          "deprecationMessage": "This setting is deprecated. Use laravelForgemate.frontendPaths.modelsPath instead.",
+          "scope": "resource"
         },
         "laravelForgemate.frontendResourcesPath": {
           "type": "string",
           "default": "resources/js/Support/Interfaces/Resources",
-          "description": "Custom path for frontend resource interfaces"
+          "markdownDescription": "**Deprecated**: Use `frontendPaths.resourcesPath` instead. Path for frontend resource interfaces.",
+          "deprecationMessage": "This setting is deprecated. Use laravelForgemate.frontendPaths.resourcesPath instead.",
+          "scope": "resource"
         },
         "laravelForgemate.frontendServicesPath": {
           "type": "string",
           "default": "resources/js/Services",
-          "description": "Custom path for frontend services"
+          "markdownDescription": "**Deprecated**: Use `frontendPaths.servicesPath` instead. Path for frontend services.",
+          "deprecationMessage": "This setting is deprecated. Use laravelForgemate.frontendPaths.servicesPath instead.",
+          "scope": "resource"
         },
         "laravelForgemate.frontendConstantsPath": {
           "type": "string",
           "default": "resources/js/Support/Constants",
-          "description": "Custom path for frontend constants"
+          "markdownDescription": "**Deprecated**: Use `frontendPaths.constantsPath` instead. Path for frontend constants.",
+          "deprecationMessage": "This setting is deprecated. Use laravelForgemate.frontendPaths.constantsPath instead.",
+          "scope": "resource"
         },
         "laravelForgemate.frontendHelpersPath": {
           "type": "string",
           "default": "resources/js/Helpers",
-          "description": "Custom path for frontend helpers"
+          "markdownDescription": "**Deprecated**: Use `frontendPaths.helpersPath` instead. Path for frontend helpers.",
+          "deprecationMessage": "This setting is deprecated. Use laravelForgemate.frontendPaths.helpersPath instead.",
+          "scope": "resource"
         },
         "laravelForgemate.frontendOthersPath": {
           "type": "string",
           "default": "resources/js/Support/Interfaces/Others",
-          "description": "Custom path for other frontend interfaces"
+          "markdownDescription": "**Deprecated**: Use `frontendPaths.othersPath` instead. Path for other frontend interfaces.",
+          "deprecationMessage": "This setting is deprecated. Use laravelForgemate.frontendPaths.othersPath instead.",
+          "scope": "resource"
         }
       }
     }
